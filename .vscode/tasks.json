@@ -1,0 +1,61 @@
+{
+    "version": "0.1.0",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
+    "echoCommand": true,
+    "tasks": [{
+            "command": "mix",
+            "taskName": "build",
+            "args": [
+                "compile"
+            ],
+            "problemMatcher": [
+                "$mixCompileError",
+                "$mixCompileWarning"
+            ],
+            "isBuildCommand": true
+        },
+        {
+            "command": "mix",
+            "taskName": "run_elixir",
+            "args": [
+                "run", "${relativeFile}"
+            ],
+            "problemMatcher": [
+                "$mixCompileError",
+                "$mixCompileWarning"
+            ]
+        },
+        {
+            "command": "mix",
+            "taskName": "test_elixir",
+            "args": [
+                "test"
+            ],
+            "problemMatcher": [
+                "$mixCompileError",
+                "$mixCompileWarning"
+            ]
+        },
+        {
+            "command": "node",
+            "taskName": "run_node",
+            "args": [
+                "${relativeFile}"
+            ]
+        }, {
+            "command": "mix",
+            "taskName": "test",
+            "args": [
+                "test"
+            ],
+            "problemMatcher": [
+                "$mixCompileError",
+                "$mixCompileWarning",
+                "$mixTestFailure"
+            ],
+            "isTestCommand": true
+        }
+    ]
+}
