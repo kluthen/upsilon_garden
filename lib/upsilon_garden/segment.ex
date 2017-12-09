@@ -1,6 +1,7 @@
 defmodule UpsilonGarden.Segment do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto
   alias UpsilonGarden.{Segment, Repo, Bloc}
 
 
@@ -8,6 +9,7 @@ defmodule UpsilonGarden.Segment do
     field :depth, :integer
     field :position, :integer
     field :sunshine, :float
+    field :active, :boolean
 
     belongs_to :garden, UpsilonGarden.Garden
     has_many :blocs, UpsilonGarden.Bloc 
@@ -16,22 +18,26 @@ defmodule UpsilonGarden.Segment do
     timestamps()
   end
 
-  def create(segment) do 
-    segment
-    |> Repo.insert!
+  def create(segment, context) do 
+    segment = segment
+    |> Repo.insert!(returning: true)
 
-    for i <- 0..(get_field(segment, :depth)) do
+    for i <- 0..(segment.depth - 2) do
       build_assoc(segment, :blocs)
-      |> change(position: i, type: Bloc.Earth)
-      |> Bloc.create
+      |> change(position: i, type: Bloc.earth)
+      |> Bloc.create(context)
     end
+
+    build_assoc(segment, :blocs)
+    |> change(position: (segment.depth-1), type: Bloc.stone)
+    |> Bloc.create(context)
 
   end
 
   @doc false
   def changeset(%Segment{} = segment, attrs) do
     segment
-    |> cast(attrs, [:position, :depth, :sunshine])
-    |> validate_required([:position, :depth, :sunshine])
+    |> cast(attrs, [:position, :depth, :active, :sunshine])
+    |> validate_required([:position, :depth, :active, :sunshine])
   end
 end

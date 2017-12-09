@@ -1,13 +1,14 @@
 defmodule UpsilonGarden.Garden do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto
   alias UpsilonGarden.{Garden, Repo, Segment}
 
 
   schema "gardens" do
-    field :dimension_max, :integer
-    field :dimension_min, :integer
+    field :dimension, :integer
     field :name, :string
+    field :context, :map
 
     belongs_to :user, UpsilonGarden.User
     has_many :events, UpsilonGarden.Event 
@@ -16,21 +17,24 @@ defmodule UpsilonGarden.Garden do
     timestamps()
   end
 
-  def create(garden) do 
-    garden
-    |> Repo.insert!
+  def create(garden, context \\ %{} ) do 
+    Repo.transaction( fn ->
+      garden = garden
+      |> change(context: context)
+      |> Repo.insert!(returning: true)
 
-    for i <- 50..(50 + get_field(garden,dimension_min)) do 
-      build_assoc(garden, :segments)
-      |> change(depth: 10, position: i, sunshine: 0.9)
-      |> Segment.create
-    end
+      for i <- 0..(garden.dimension) do 
+        build_assoc(garden, :segments)
+        |> change(depth: 10, position: i, sunshine: 0.9)
+        |> Segment.create(garden.context)
+      end
+    end)
   end
 
   @doc false
   def changeset(%Garden{} = garden, attrs) do
     garden
-    |> cast(attrs, [:name, :dimension_min, :dimension_max])
-    |> validate_required([:name, :dimension_min, :dimension_max])
+    |> cast(attrs, [:name, :dimension, :context])
+    |> validate_required([:name, :dimension, :context])
   end
 end

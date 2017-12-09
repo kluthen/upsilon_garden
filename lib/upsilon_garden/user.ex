@@ -14,13 +14,14 @@ defmodule UpsilonGarden.User do
 
 
   def create(username) do 
-    user = changeset(%User{}, %{name: username})
-    |> Repo.insert!(returning: true)
-    |> build_assoc(:gardens)
-    |> change(dimension_min: 3, dimension_max: 10)
-    |> Garden.create
-
-    {:ok, user}
+    Repo.transaction( fn ->
+      user = changeset(%User{}, %{name: username})
+      |> Repo.insert!(returning: true)
+      |> build_assoc(:gardens)
+      |> change(dimension: 10, name: "My First Garden", context: %{})
+      |> Garden.create()
+      {:ok, user} 
+    end )
   end
 
   @doc false

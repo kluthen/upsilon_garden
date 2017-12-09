@@ -3,6 +3,8 @@ defmodule UpsilonGarden.Bloc do
   import Ecto.Changeset
   alias UpsilonGarden.{Bloc, Repo}
 
+  def earth, do: 0
+  def stone, do: 1
 
   schema "blocs" do
     field :position, :integer
@@ -16,7 +18,7 @@ defmodule UpsilonGarden.Bloc do
     timestamps()
   end
 
-  def create(bloc) do 
+  def create(bloc,context) do 
       bloc
       |> Repo.insert!(returning: true)
   end

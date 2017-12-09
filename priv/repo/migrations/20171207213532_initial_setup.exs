@@ -9,9 +9,9 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
     end
     create table(:gardens) do
       add :name, :string
-      add :dimension_min, :integer
-      add :dimension_max, :integer
+      add :dimension, :integer
       add :user_id, references(:users, on_delete: :delete_all)
+      add :context, :map
 
       timestamps()
     end
@@ -20,6 +20,7 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
 
     create table(:segments) do
       add :position, :integer
+      add :active, :boolean
       add :depth, :integer
       add :sunshine, :float
       add :garden_id, references(:gardens, on_delete: :delete_all)
