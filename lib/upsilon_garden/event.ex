@@ -13,7 +13,6 @@ defmodule UpsilonGarden.Event do
     field :type, :integer
 
     belongs_to :garden, UpsilonGarden.Garden
-    many_to_many :segments, UpsilonGarden.Segment, join_through: "events_segments"
     has_many :components, UpsilonGarden.Component
 
     timestamps()

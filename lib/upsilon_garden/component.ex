@@ -7,9 +7,9 @@ defmodule UpsilonGarden.Component do
   schema "components" do
     field :component, :string
     field :number, :integer
-    belongs_to :bloc, UpsilonGarden.Bloc
+    
     belongs_to :source, UpsilonGarden.Source
-    belongs_to :event, UpsilonGarde.Event
+    belongs_to :event, UpsilonGarden.Event
     
     timestamps()
   end

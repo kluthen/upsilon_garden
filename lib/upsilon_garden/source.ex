@@ -9,7 +9,7 @@ defmodule UpsilonGarden.Source do
     field :power, :integer
     field :type, :integer
 
-    has_many :influences, UpsilonGarden.Influence
+    belongs_to :garden, UpsilonGarden.Garden
     has_many :components, UpsilonGarden.Component
 
     timestamps()

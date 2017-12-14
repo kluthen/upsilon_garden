@@ -18,7 +18,7 @@ defmodule UpsilonGarden.User do
       user = changeset(%User{}, %{name: username})
       |> Repo.insert!(returning: true)
       |> build_assoc(:gardens)
-      |> change(dimension: 10, name: "My First Garden", context: %{})
+      |> change(name: "My First Garden")
       |> Garden.create()
       {:ok, user} 
     end )
