@@ -1,19 +1,22 @@
 defmodule UpsilonGarden.GardenContext do 
+    use Ecto.Schema
     alias UpsilonGarden.GardenContext
 
-    defstruct available_components: [],
-            components_by_bloc: [],
-            depth_range: [],
-            dimension_range: [],
-            sunshine_range: [],
-            sources_range: [],
-            dirt_stone_ratio_range: [],
-            available_source_components: [],
-            depth: 0,
-            dimension: 0,
-            sunshine: 0,
-            sources: 0,
-            dirt_stone_ratio: 0
+    embedded_schema do
+        field :available_components, {:array, :string}
+        field :components_by_bloc,  {:array, :integer}
+        field :depth_range, {:array, :integer}
+        field :dimension_range, {:array, :integer}
+        field :sunshine_range, {:array, :float}
+        field :sources_range, {:array, :integer}
+        field :dirt_stone_ratio_range, {:array, :float}
+        field :available_source_components, {:array, :string}
+        field :depth, :integer
+        field :dimension, :integer
+        field :sunshine, :float
+        field :sources, :integer
+        field :dirt_stone_ratio, :float
+    end
         
     
     def prepare_range(list) do 
@@ -51,6 +54,4 @@ defmodule UpsilonGarden.GardenContext do
         |> Map.put(:sources,            Enum.random(context.sources_range))
         |> Map.put(:dirt_stone_ratio,   Enum.random(context.dirt_stone_ratio_range))
     end
-
-
 end

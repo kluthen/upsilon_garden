@@ -1,23 +1,41 @@
 defmodule UpsilonGarden.GardenData do 
+    use Ecto.Schema
+
     defmodule Segment do 
-        defstruct active: false, blocs: []
+        use Ecto.Schema
+        
+        embedded_schema do 
+            field :active, :boolean
+            embeds_many :blocs, Bloc
+        end
     end
 
     defmodule Component do 
-        defstruct composition: "", quantity: 0.0
+        use Ecto.Schema
+
+        embedded_schema do 
+            field :composition, :string
+            field :quantity, :float
+        end
     end
 
     defmodule Bloc do 
+        use Ecto.Schema
+
         def dirt, do: 0
         def stone, do: 1
 
-        defstruct type: 0, components: [], influences: []
+        embedded_schema do 
+            field :type, :integer 
+            embeds_many :components, Component 
+            embeds_many :influences, Influence
+        end 
 
         def fill(bloc, context) do 
             components = for _ <- 0..(Enum.random(context.components_by_bloc) -1) do 
                 Enum.random(context.available_components)    
             end
-            components = Enum.map_reduce(components, %{}, fn itm, acc -> 
+            {_,components} = Enum.map_reduce(components, %{}, fn itm, acc -> 
                 {itm, Map.update(acc, itm, 1, &(&1 + 1))}
             end)
 
@@ -30,25 +48,33 @@ defmodule UpsilonGarden.GardenData do
     end
 
     defmodule Influence do
+        use Ecto.Schema
         def components, do: 0
         def hygro, do: 1
+        def plant, do: 1
         def temperature, do: 2
 
-        defstruct   event_id: nil,
-                    source_id: nil,
-                    plant_id: nil,
-                    ratio: 1.0,
-                    components: [],
-                    type: 0
+        embedded_schema do 
+            field :type, :integer
+            field :event_id, :integer
+            field :source_id, :integer
+            field :plant_id, :integer
+            field :ratio, :float
+            embeds_many :components, Component
+        end
+            
     end
 
-    defstruct segments: []
+    embedded_schema do 
+        embeds_many :segments, Segment
+    end
+    
 
     def generate(context) do 
         data = %UpsilonGarden.GardenData{}
-        segments = for _pos <- 0..(context.dimension -1) do 
+        segments = for _pos <- 0..(context.dimension - 1) do 
             segment = %Segment{}
-            blocs = for depth <- 0..(context.depth -1 ) do
+            blocs = for depth <- 0..(context.depth - 1 ) do
                 bloc = %Bloc{}
                 cond do
                     depth == context.depth - 1 ->
