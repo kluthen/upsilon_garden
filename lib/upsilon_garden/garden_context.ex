@@ -1,5 +1,6 @@
 defmodule UpsilonGarden.GardenContext do 
     use Ecto.Schema
+    import Ecto.Changeset
     alias UpsilonGarden.GardenContext
 
     embedded_schema do
@@ -16,6 +17,18 @@ defmodule UpsilonGarden.GardenContext do
         field :sunshine, :float
         field :sources, :integer
         field :dirt_stone_ratio, :float
+    end
+
+    def changeset(%GardenContext{} = context, attrs \\ %{}) do
+        context
+        |> cast(attrs,[:available_components, :components_by_bloc, :depth_range,
+                       :dimension_range, :sunshine_range, :sources_range,
+                       :dirt_stone_ratio_range, :available_source_components,
+                       :depth, :dimension, :sunshine, :sources, :dirt_stone_ratio])
+        |> validate_required([:available_components, :components_by_bloc, :depth_range,
+                        :dimension_range, :sunshine_range, :sources_range,
+                        :dirt_stone_ratio_range, :available_source_components,
+                        :depth, :dimension, :sunshine, :sources, :dirt_stone_ratio])
     end
         
     

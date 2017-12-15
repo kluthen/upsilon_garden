@@ -1,5 +1,6 @@
 defmodule UpsilonGarden.GardenData do 
     use Ecto.Schema
+    import Ecto.Changeset
 
     defmodule Segment do 
         use Ecto.Schema
@@ -7,6 +8,13 @@ defmodule UpsilonGarden.GardenData do
         embedded_schema do 
             field :active, :boolean
             embeds_many :blocs, Bloc
+        end
+
+        def changeset(%Segment{} = segment, attrs \\ %{} ) do 
+            segment
+            |> cast(attrs, [:active])
+            |> cast_embed(:blocs)
+            |> validate_required([:active, :blocs])
         end
     end
 
@@ -17,6 +25,13 @@ defmodule UpsilonGarden.GardenData do
             field :composition, :string
             field :quantity, :float
         end
+
+        def changeset(%Component{} = component, attrs \\ %{} ) do 
+            component
+            |> cast(attrs, [:composition, :quantity])
+            |> validate_required([:composition, :quantity])
+        end
+
     end
 
     defmodule Bloc do 
@@ -30,6 +45,14 @@ defmodule UpsilonGarden.GardenData do
             embeds_many :components, Component 
             embeds_many :influences, Influence
         end 
+
+        def changeset(%Bloc{} = bloc, attrs \\ %{}) do
+            bloc
+            |> cast(attrs, [:type])
+            |> cast_embed(:components)
+            |> cast_embed(:influences)
+            |> validate_required([:type, :components, :influences])
+        end
 
         def fill(bloc, context) do 
             components = for _ <- 0..(Enum.random(context.components_by_bloc) -1) do 
@@ -63,10 +86,22 @@ defmodule UpsilonGarden.GardenData do
             embeds_many :components, Component
         end
             
+        def changeset(%Influence{} = influence, attrs \\ %{} ) do
+            influence
+            |> cast(attrs, [:type, :event_id, :source_id, :plant_id, :ratio])
+            |> cast_embed(:components)
+            |> validate_required([:type, :event_id, :source_id, :plant_id, :ratio, :components])
+        end
     end
 
     embedded_schema do 
         embeds_many :segments, Segment
+    end
+
+    def changeset(%UpsilonGarden.GardenData{} = data) do
+        data
+        |> cast_embed(:segments)
+        |> validate_required([:segments])
     end
     
 
@@ -77,9 +112,9 @@ defmodule UpsilonGarden.GardenData do
             blocs = for depth <- 0..(context.depth - 1 ) do
                 bloc = %Bloc{}
                 cond do
-                    depth == context.depth - 1 ->
+                    depth == context.depth - 1 -> # ensure last bloc is always stone.
                         Map.put(bloc, :type, Bloc.stone())  
-                    depth < 3 -> 
+                    depth < 3 -> # ensure topmost blocs are always dirt 
                         Bloc.fill(bloc, context)
                     true ->
                         if :rand.uniform > context.dirt_stone_ratio do
