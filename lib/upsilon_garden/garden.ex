@@ -1,8 +1,7 @@
 defmodule UpsilonGarden.Garden do
   use Ecto.Schema
   import Ecto.Changeset
-  import Ecto
-  alias UpsilonGarden.{Garden, Repo, Segment}
+  alias UpsilonGarden.{Garden,GardenContext, Repo}
 
 
   schema "gardens" do
@@ -21,11 +20,11 @@ defmodule UpsilonGarden.Garden do
 
 
   def create(garden, context \\ %{} ) do 
-    context = Map.merge(Garden.default_context, context)
-    |> roll_dices
+    context = Map.merge(GardenContext.default, context)
+    |> GardenContext.roll_dices
 
     Repo.transaction( fn ->
-      garden = garden
+      garden
       |> change(context: context, dimension: context.dimension)
       |> Repo.insert!(returning: true)
     end)
@@ -36,7 +35,7 @@ defmodule UpsilonGarden.Garden do
   @doc false
   def changeset(%Garden{} = garden, attrs) do
     garden
-    |> cast(attrs, [:name, :dimension, :context])
-    |> validate_required([:name, :dimension, :context])
+    |> cast(attrs, [:name, :dimension, :context, :data, :projection])
+    |> validate_required([:name, :dimension, :context, :data, :projection])
   end
 end
