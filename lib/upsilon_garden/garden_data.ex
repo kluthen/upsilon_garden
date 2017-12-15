@@ -98,7 +98,7 @@ defmodule UpsilonGarden.GardenData do
         embeds_many :segments, Segment
     end
 
-    def changeset(%UpsilonGarden.GardenData{} = data) do
+    def changeset(%UpsilonGarden.GardenData{} = data, _attrs \\ %{}) do
         data
         |> cast_embed(:segments)
         |> validate_required([:segments])
