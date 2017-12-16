@@ -1,0 +1,22 @@
+<%= if @bloc != nil do %>
+<ul>
+    <li>Bloc : <%= @bloc.position %></li>
+    <li>Type : <%= if @bloc.type == UpsilonGarden.GardenData.Bloc.dirt() do
+        "Dirt"
+    else
+        "Stone"
+    end %></li>
+    <li>
+        Components :
+        <ul>
+        <%= for component <- @bloc.components do %>
+            <li>
+                <%= component.quantity %> x <%= component.composition %> 
+            </li>
+        <% end %>
+        </ul>
+    </li>
+</ul>
+<% else %>
+No bloc data
+<% end %>

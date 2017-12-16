@@ -7,16 +7,17 @@ defmodule UpsilonGarden.GardenData.Bloc do
 
     embedded_schema do 
         field :type, :integer 
+        field :position, :integer
         embeds_many :components, UpsilonGarden.GardenData.Component 
         embeds_many :influences, UpsilonGarden.GardenData.Influence
     end 
 
     def changeset(%UpsilonGarden.GardenData.Bloc{} = bloc, attrs \\ %{}) do
         bloc
-        |> cast(attrs, [:type])
+        |> cast(attrs, [:type, :position])
         |> cast_embed(:components)
         |> cast_embed(:influences)
-        |> validate_required([:type, :components, :influences])
+        |> validate_required([:type, :position, :components, :influences])
     end
 
     def fill(bloc, context) do 

@@ -41,16 +41,37 @@ defmodule UpsilonGarden.GardenData do
         Map.put(data, :segments, new_segments)
     end
 
+    def get_segment(data, sid) do 
+        if length(data.segments) > sid do 
+            Enum.at(data.segments, sid)
+        else
+            nil
+        end
+    end
+
+    def get_bloc(data, sid, bid) do 
+        if length(data.segments) > sid do 
+            segment = Enum.at(data.segments, sid)
+            if length(segment.blocs) > bid do 
+                Enum.at(segment.blocs, bid)
+            else
+                nil
+            end
+        else
+            nil
+        end
+    end
+
     def generate(context) do 
         data = %UpsilonGarden.GardenData{}
         segments = for pos <- 0..(context.dimension - 1) do 
             segment = %UpsilonGarden.GardenData.Segment{position: pos}
             blocs = for depth <- 0..(context.depth - 1 ) do
-                bloc = %UpsilonGarden.GardenData.Bloc{}
+                bloc = %UpsilonGarden.GardenData.Bloc{position: depth}
                 cond do
                     depth == context.depth - 1 -> # ensure last bloc is always stone.
                         Map.put(bloc, :type, UpsilonGarden.GardenData.Bloc.stone())  
-                    depth < 3 -> # ensure topmost blocs are always dirt 
+                    depth < context.prepared_depth -> # ensure topmost blocs are always dirt 
                         UpsilonGarden.GardenData.Bloc.fill(bloc, context)
                     true ->
                         if :rand.uniform > context.dirt_stone_ratio do

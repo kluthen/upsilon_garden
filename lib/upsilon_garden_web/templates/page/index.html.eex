@@ -11,6 +11,12 @@
 
   <div class="col-lg-4">
     <h4>Help</h4>
-    
+    <div id="show_segment">
+
+    </div>
+    <div id="show_bloc">
+
+    </div>
   </div>
 </div>
+
