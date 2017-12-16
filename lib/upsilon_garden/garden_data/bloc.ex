@@ -31,6 +31,8 @@ defmodule UpsilonGarden.GardenData.Bloc do
             %UpsilonGarden.GardenData.Component{composition: comp, quantity: quantity}
         end
 
-        Map.put(bloc, :components, components)
+        bloc 
+        |> Map.put(:components, components)
+        |> Map.put(:type, UpsilonGarden.GardenData.Bloc.dirt())
     end
 end

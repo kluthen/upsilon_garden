@@ -1,1 +1,52 @@
 /* This file is for your main application css. */
+
+.segment {
+    width: 40px;
+    float: left;
+}
+
+.above_ground {
+    height: 200px;
+    width: 100%;
+    text-align: center;
+}
+
+.ground_level {
+    height: 3px;
+    width: 100%;
+    background-color: green;
+}
+
+.segment_active {
+    background-color: lightblue;
+}
+
+.segment_inactive {
+    background-color: darkslategray;
+}
+
+.bloc {
+    height: 40px;
+    width: 100%;
+}
+
+.bloc_type_0 {
+    background-color: brown;
+    opacity: 0.9;
+}
+
+.bloc_type_1 {
+    background-color: darkslategray;
+    opacity: 0.9;
+}
+
+.below_ground {
+    height: 3px;
+    width: 100%;
+    background-color: black;
+}
+
+.garden {
+    clear: left;
+    border: 1px;
+}

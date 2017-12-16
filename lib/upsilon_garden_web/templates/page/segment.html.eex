@@ -1,0 +1,17 @@
+<div class="segment segment_<%= 
+        if @segment.active do 
+            "active"
+        else
+            "inactive"
+        end
+    %>">
+    <!-- Display plant or whatever data we might have here ... -->
+    <div class="above_ground"><center><%= @segment.position %></center></div>
+    <div class="ground_level"> </div>
+    <div class="ground">
+        <%= for bloc <- @segment.blocs do %>
+            <%= render "bloc.html", bloc: bloc %>
+        <% end %>
+    </div>
+    <div class="below_ground"></div>
+</div>

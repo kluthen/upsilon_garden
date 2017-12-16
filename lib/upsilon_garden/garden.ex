@@ -8,9 +8,9 @@ defmodule UpsilonGarden.Garden do
     field :dimension, :integer
     field :name, :string
 
-    embeds_one :context, GardenContext
-    embeds_one :data, GardenData
-    embeds_one :projection, GardenProjection
+    embeds_one :context, GardenContext, on_replace: :delete
+    embeds_one :data, GardenData, on_replace: :delete
+    embeds_one :projection, GardenProjection, on_replace: :delete
 
     belongs_to :user, UpsilonGarden.User
     has_many :events, UpsilonGarden.Event 
@@ -24,9 +24,14 @@ defmodule UpsilonGarden.Garden do
     context = Map.merge(GardenContext.default, context)
     |> GardenContext.roll_dices
 
+    data = GardenData.generate(context)
+    |> GardenData.activate([3,4,5])
+
     Repo.transaction( fn ->
       garden
-      |> change(context: Map.from_struct(context), dimension: context.dimension, data: Map.from_struct(GardenData.generate(context)))
+      |> change(dimension: context.dimension)
+      |> put_embed(:context, context)
+      |> put_embed(:data, data)
       |> Repo.insert!(returning: true)
     end)
   end

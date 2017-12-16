@@ -1,0 +1,3 @@
+<div class="bloc bloc_type_<%= @bloc.type %>">
+
+</div>
