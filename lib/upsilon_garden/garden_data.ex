@@ -1,8 +1,8 @@
 defmodule UpsilonGarden.GardenData do 
     use Ecto.Schema
     import Ecto.Changeset
-    alias UpsilonGarden.{GardenData}
-    alias UpsilonGarden.GardenData.{Segment, Bloc}
+    alias UpsilonGarden.{Garden,Source}
+    alias UpsilonGarden.GardenData.{Segment}
 
     embedded_schema do 
         embeds_many :segments, UpsilonGarden.GardenData.Segment
@@ -62,7 +62,7 @@ defmodule UpsilonGarden.GardenData do
         end
     end
 
-    def generate(context) do 
+    def generate(garden, context) do 
         data = %UpsilonGarden.GardenData{}
         segments = for pos <- 0..(context.dimension - 1) do 
             segment = %UpsilonGarden.GardenData.Segment{position: pos}
@@ -83,6 +83,20 @@ defmodule UpsilonGarden.GardenData do
             end
             Map.put(segment, :blocs, blocs)
         end
-        Map.put(data,:segments, segments)            
+        Map.put(data,:segments, segments)
+        generate_sources(garden,data,context)
     end
+
+    def generate_sources(%Garden{} = garden, data, context) do 
+        generate_sources(0..(Enum.random(context.sources_range)),garden,data,context)    
+    end
+
+    def generate_sources([],_,data,_), do: data 
+
+    def generate_sources([_|rest],garden,data, context) do
+        source = Ecto.build_assoc(garden,:sources)
+        data = Source.create(source,data, context)
+        generate_sources(rest,garden,data,context)
+    end
+
 end

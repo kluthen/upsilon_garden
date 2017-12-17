@@ -23,6 +23,7 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
     create table(:sources) do
       add :type, :integer
       add :power, :integer
+      add :radiance, :integer
       add :garden_id, references(:gardens, on_delete: :delete_all)
 
       timestamps()

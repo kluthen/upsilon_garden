@@ -24,15 +24,19 @@ defmodule UpsilonGarden.Garden do
     context = Map.merge(GardenContext.default, context)
     |> GardenContext.roll_dices
 
-    data = GardenData.generate(context)
-    |> GardenData.activate([3,4,5])
-
     Repo.transaction( fn ->
-      garden
+      garden = garden
       |> change(dimension: context.dimension)
       |> put_embed(:context, context)
-      |> put_embed(:data, data)
       |> Repo.insert!(returning: true)
+      
+      data = GardenData.generate(garden,context)
+      |> GardenData.activate([3,4,5])
+
+      garden
+      |> change()
+      |> put_embed(:data, data)
+      |> Repo.update!(returning: true)
     end)
   end
 

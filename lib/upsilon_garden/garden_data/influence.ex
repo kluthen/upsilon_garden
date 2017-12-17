@@ -3,9 +3,10 @@ defmodule UpsilonGarden.GardenData.Influence do
     import Ecto.Changeset
     
     def components, do: 0
-    def hygro, do: 1
-    def plant, do: 1
-    def temperature, do: 2
+    def well, do: 1
+    def thermal, do: 2
+    def plant, do: 3
+    def event, do: 3
 
     embedded_schema do 
         field :type, :integer
@@ -13,6 +14,7 @@ defmodule UpsilonGarden.GardenData.Influence do
         field :source_id, :integer
         field :plant_id, :integer
         field :ratio, :float
+        field :power, :integer
         embeds_many :components, UpsilonGarden.GardenData.Component
     end
         

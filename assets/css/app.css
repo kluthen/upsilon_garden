@@ -38,6 +38,10 @@
     width: 100%;
 }
 
+.bloc_locked {
+    border: 1px solid blue;
+}
+
 .above_ground_active:hover {
     width: 100%;
     border: 1px solid yellow;

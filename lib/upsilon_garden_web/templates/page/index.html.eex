@@ -9,12 +9,22 @@
     </div>
   </div>
 
-  <div class="col-lg-4">
+  <div class="col-lg-2">
     <h4>Help</h4>
     <div id="show_segment">
 
     </div>
+    <div id="show_plant"></div>
     <div id="show_bloc">
+
+    </div>
+  </div>
+  <div class="col-lg-2">
+    <h4>Locked</h4>
+    <div id="show_locked_plant">
+
+    </div>
+    <div id="show_locked_bloc">
 
     </div>
   </div>

@@ -1,8 +1,6 @@
 <%= if @segment != nil do %>
-<ul>
-    <li>Segment :<%= @segment.position %></li>
-    <li>Active : <%= @segment.active %></li>
-</ul>
+Segment :<%= @segment.position %><br/>
+Active : <%= @segment.active %><br/>
 <% else %>
 No Segment data
 <% end %>
