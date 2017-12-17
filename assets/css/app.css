@@ -60,6 +60,18 @@
     opacity: 0.9;
 }
 
+.bloc_source_0 {
+    border: 1px solid green;
+}
+
+.bloc_source_1 {
+    border: 1px solid yellow;
+}
+
+.bloc_source_2 {
+    border: 1px solid blue;
+}
+
 .bloc_type_0 {
     background-color: brown;
     opacity: 0.9;
@@ -68,6 +80,11 @@
 .bloc_type_1 {
     background-color: darkslategray;
     opacity: 0.9;
+}
+
+.bloc_influenced {
+    opacity: 0.9;
+    background-color: rgb(165, 77, 42);
 }
 
 .below_ground {

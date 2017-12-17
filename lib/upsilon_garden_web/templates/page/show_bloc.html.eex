@@ -10,10 +10,20 @@
     <%= for component <- @bloc.components do %>
         <%= component.quantity %> x <%= component.composition %> <br/>
     <% end %>
-    Influences<br/>
-    <%= for influence <- @bloc.influences do %>
-        <%= render "influence.html", influence: influence %>
+    
+    <%= if length(@bloc.sources) > 0 do %>
+        <%= for source <- @bloc.sources do %>
+            Source: <%= UpsilonGarden.GardenData.Bloc.source_string(source) %>
+        <% end %>
     <% end %>
+
+    <%= if length(@bloc.influences) > 0 do %>
+    Influences<br/>
+        <%= for influence <- @bloc.influences do %>
+            <%= render "influence.html", influence: influence %>
+        <% end %>
+    <% end %>
+
         
 <% else %>
 No bloc data

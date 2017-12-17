@@ -40,7 +40,7 @@ defmodule UpsilonGarden.Source do
 
     segment = Enum.at(data.segments, segment_id)
     bloc = Enum.at(segment.blocs, bloc_id)
-    sources = [source.id| bloc.sources]
+    sources = [ Map.take(source, [:id, :type])  | bloc.sources]
     bloc = Map.put(bloc, :sources, sources)
     segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,bloc_id,bloc))
     segments = List.replace_at(data.segments,segment_id, segment)

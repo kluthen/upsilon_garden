@@ -8,10 +8,18 @@ defmodule UpsilonGarden.GardenData.Bloc do
     embedded_schema do 
         field :type, :integer 
         field :position, :integer
-        field :sources, {:array, :integer}
+        field :sources, {:array, :map}
         embeds_many :components, UpsilonGarden.GardenData.Component 
         embeds_many :influences, UpsilonGarden.GardenData.Influence
     end 
+
+    def source_string(source) do 
+        case source["type"] do 
+            0 -> "Components"
+            1 -> "Thermal"
+            2 -> "Well"
+        end
+    end
 
     def changeset(%UpsilonGarden.GardenData.Bloc{} = bloc, attrs \\ %{}) do
         bloc
