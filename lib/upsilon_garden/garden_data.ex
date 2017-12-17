@@ -83,12 +83,12 @@ defmodule UpsilonGarden.GardenData do
             end
             Map.put(segment, :blocs, blocs)
         end
-        Map.put(data,:segments, segments)
+        data = Map.put(data,:segments, segments)
         generate_sources(garden,data,context)
     end
 
     def generate_sources(%Garden{} = garden, data, context) do 
-        generate_sources(0..(Enum.random(context.sources_range)),garden,data,context)    
+        generate_sources(Enum.to_list(0..(Enum.random(context.sources_range))),garden,data,context)    
     end
 
     def generate_sources([],_,data,_), do: data 

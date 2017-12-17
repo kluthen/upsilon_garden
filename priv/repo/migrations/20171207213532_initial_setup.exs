@@ -44,7 +44,7 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
     create index(:events, [:garden_id])
     
     create table(:components) do
-      add :number, :integer
+      add :quantity, :integer
       add :composition, :string
       add :source_id, references(:sources, on_delete: :delete_all)
       add :event_id, references(:events, on_delete: :delete_all)

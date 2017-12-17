@@ -22,7 +22,7 @@ defmodule UpsilonGarden.Source do
 
   def create(source, data, context) do 
     # roll segment
-    segment_id = :rand.uniform(context.dimension)
+    segment_id = :rand.uniform(context.dimension - 1)
     segment = Enum.at(data.segments, segment_id) 
     # roll bloc
     bloc_id = :rand.uniform(context.depth)
@@ -83,16 +83,16 @@ defmodule UpsilonGarden.Source do
     segments = List.replace_at(data.segments,segment_id, segment)
 
     # add pattern selection here centered on segment_id,bloc_id 
-    segments = generate_influences([segment_id, bloc_id], radiance, segments, base_influence )
+    segments = generate_influences([{segment_id, bloc_id}], radiance, segments, base_influence )
 
     Map.put(data, :segments, segments)
   end
 
   def generate_components([], _), do: nil
   
-  def generate_components([{comp,number}|rest], source) do 
+  def generate_components([%Component{} = compo|rest], source) do 
     Ecto.build_assoc(source, :components)
-    |> change(component: comp, number: number)
+    |> change(component: compo.composition, number: compo.quantity)
     |> Repo.insert! 
     generate_components(rest, source)
   end
@@ -135,7 +135,7 @@ defmodule UpsilonGarden.Source do
     bloc = Enum.at(segment.blocs, y)
 
     influence = Map.put(influence, :ratio, dist/power)
-    influences = [influence | bloc.influence]
+    influences = [influence | bloc.influences]
     bloc = Map.put(bloc, :influences, influences)
 
     segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))

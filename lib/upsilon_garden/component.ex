@@ -5,8 +5,8 @@ defmodule UpsilonGarden.Component do
 
 
   schema "components" do
-    field :component, :string
-    field :number, :integer
+    field :composition, :string
+    field :quantity, :integer
     
     belongs_to :source, UpsilonGarden.Source
     belongs_to :event, UpsilonGarden.Event
