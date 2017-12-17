@@ -15,10 +15,12 @@ var garden = {
                 $("#show_bloc").html(data);
             });
     },
-    current_locked_segment: 0,
-    current_locked_bloc: 0,
+    current_locked_segment: -1,
+    current_locked_bloc: -1,
     setLockedBloc: function(sid, bid) {
-        $(".bloc_active[data-segment='" + this.current_locked_segment + "'][data-bloc='" + this.current_locked_bloc + "']").toggleClass("bloc_locked");
+        if (this.currnet_locked_bloc != -1) {
+            $(".bloc_active[data-segment='" + this.current_locked_segment + "'][data-bloc='" + this.current_locked_bloc + "']").toggleClass("bloc_locked");
+        }
 
         this.current_locked_segment = sid;
         this.current_locked_bloc = bid;
@@ -26,6 +28,7 @@ var garden = {
             .success(function(data) {
                 $("#show_locked_bloc").html(data);
             });
+        console.log('Locking ' + this.current_locked_segment + 'x' + this.current_locked_bloc);
         $(".bloc_active[data-segment='" + this.current_locked_segment + "'][data-bloc='" + this.current_locked_bloc + "']").toggleClass("bloc_locked");
     }
 }

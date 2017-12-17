@@ -10,7 +10,7 @@ defmodule UpsilonGarden.GardenContext do
         field :dimension_range, {:array, :integer}
         field :sunshine_range, {:array, :float}
         field :sources_range, {:array, :integer}
-        field :source_power_range, {:array, :integer}
+        field :source_power_range, {:array, :float}
         field :source_type_range, {:array, :integer}
         field :source_radiance_range, {:array, :integer}
         field :dirt_stone_ratio_range, {:array, :float}
@@ -61,9 +61,9 @@ defmodule UpsilonGarden.GardenContext do
             dirt_stone_ratio_range: GardenContext.prepare_range([{0.95,4},{0.90,2},{0.85,1},{0.80,1},{0.75,1},{0.70,1}]),
             available_source_components: GardenContext.prepare_range([{"ABE", 5}, {"CAD",3}, {"FAD",1}, {"BFE",1}]),
             prepared_depth_range: GardenContext.prepare_range([{3,1}]),
-            source_power_range: GardenContext.prepare_range([{10,1},{15,3},{20,1}]),
-            source_radiance_range: GardenContext.prepare_range([{0,4},{1,1},{2,1}]),
-            source_type_range: GardenContext.prepare_range([{0,4},{1,1},{2,1}]),
+            source_power_range: GardenContext.prepare_range([{20,1},{30,3},{40,1}]),
+            source_radiance_range: GardenContext.prepare_range([{2,4},{3,1}]),
+            source_type_range: GardenContext.prepare_range([{0,5},{1,1},{2,1}]),
             depth: 0,
             dimension: 0,
             sunshine: 0,

@@ -65,9 +65,9 @@ defmodule UpsilonGarden.GardenData do
     def generate(garden, context) do 
         data = %UpsilonGarden.GardenData{}
         segments = for pos <- 0..(context.dimension - 1) do 
-            segment = %UpsilonGarden.GardenData.Segment{position: pos}
+            segment = %UpsilonGarden.GardenData.Segment{position: pos, active: false}
             blocs = for depth <- 0..(context.depth - 1 ) do
-                bloc = %UpsilonGarden.GardenData.Bloc{position: depth}
+                bloc = %UpsilonGarden.GardenData.Bloc{position: depth, sources: []}
                 cond do
                     depth == context.depth - 1 -> # ensure last bloc is always stone.
                         Map.put(bloc, :type, UpsilonGarden.GardenData.Bloc.stone())  
@@ -88,7 +88,8 @@ defmodule UpsilonGarden.GardenData do
     end
 
     def generate_sources(%Garden{} = garden, data, context) do 
-        generate_sources(Enum.to_list(0..(Enum.random(context.sources_range))),garden,data,context)    
+        targets = Enum.to_list(0..(Enum.random(context.sources_range)))
+        generate_sources(targets,garden,data,context)    
     end
 
     def generate_sources([],_,data,_), do: data 

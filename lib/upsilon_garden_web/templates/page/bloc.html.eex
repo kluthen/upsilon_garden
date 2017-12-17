@@ -1,7 +1,12 @@
+<!--
 <%= if @active do %>
     <div class="bloc bloc_active bloc_type_<%= @bloc.type %>" data-segment="<%= @segment_id %>" data-bloc="<%= @bloc.position %>">
 
     </div>
 <% else %>
     <div class="bloc bloc_inactive"></div>
-<% end %>
+<% end %> -->
+
+    <div class="bloc bloc_active bloc_type_<%= @bloc.type %>" data-segment="<%= @segment_id %>" data-bloc="<%= @bloc.position %>">
+        
+    </div>

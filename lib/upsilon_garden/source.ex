@@ -23,10 +23,8 @@ defmodule UpsilonGarden.Source do
   def create(source, data, context) do 
     # roll segment
     segment_id = :rand.uniform(context.dimension - 1)
-    segment = Enum.at(data.segments, segment_id) 
     # roll bloc
-    bloc_id = :rand.uniform(context.depth)
-    bloc = Enum.at(segment.blocs, bloc_id)
+    bloc_id = :rand.uniform(context.depth - 1)
     # roll type
     type = Enum.random(context.source_type_range)
     # roll radiance
@@ -38,6 +36,14 @@ defmodule UpsilonGarden.Source do
     source = source
     |> change(type: type, radiance: radiance, power: power)
     |> Repo.insert!(returning: true)
+
+
+    segment = Enum.at(data.segments, segment_id)
+    bloc = Enum.at(segment.blocs, bloc_id)
+    sources = [source.id| bloc.sources]
+    bloc = Map.put(bloc, :sources, sources)
+    segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,bloc_id,bloc))
+    segments = List.replace_at(data.segments,segment_id, segment)
 
     # generate base influence.
     base_influence = case type do 
@@ -73,15 +79,12 @@ defmodule UpsilonGarden.Source do
           power: power
         }
       2 -> # Well 
-      %Influence{
-        type: Influence.well,
-        source_id: source.id,
-        power: power
-      }
+        %Influence{
+          type: Influence.well,
+          source_id: source.id,
+          power: power
+        }
     end    
-    segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,bloc_id,bloc))
-    segments = List.replace_at(data.segments,segment_id, segment)
-
     # add pattern selection here centered on segment_id,bloc_id 
     segments = generate_influences([{segment_id, bloc_id}], radiance, segments, base_influence )
 
@@ -118,12 +121,12 @@ defmodule UpsilonGarden.Source do
   def generate_cell_influences(y, x, max_x, targets, segments, power, base_influence) do 
     if x < max_x do 
       dist = distance(targets, 99, x, y)
-      if dist < power do 
+      if dist <= power do 
         # update bloc/segment.
         segments = set_influence(x,y,segments, power, dist, base_influence)
-        generate_cell_influences(x+1,y, max_x, targets, segments, power, base_influence)
+        generate_cell_influences(y, x+1, max_x, targets, segments, power, base_influence)
       else
-        generate_cell_influences(x+1,y, max_x, targets, segments, power, base_influence)
+        generate_cell_influences(y, x+1, max_x, targets, segments, power, base_influence)
       end
     else
       segments
@@ -133,13 +136,16 @@ defmodule UpsilonGarden.Source do
   def set_influence(x,y,segments, power, dist, influence) do 
     segment = Enum.at(segments, x) 
     bloc = Enum.at(segment.blocs, y)
-
-    influence = Map.put(influence, :ratio, dist/power)
-    influences = [influence | bloc.influences]
-    bloc = Map.put(bloc, :influences, influences)
-
-    segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))
-    List.replace_at(segments,x, segment)
+    if bloc.type == UpsilonGarden.GardenData.Bloc.stone() do 
+      # leave it alone if bloc is a stone ;)
+      segments
+    else
+      influence = Map.put(influence, :ratio, Float.round(1 - (dist/(power+1)),2))
+      influences = [influence | bloc.influences]
+      bloc = Map.put(bloc, :influences, influences)
+      segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))
+      List.replace_at(segments,x, segment)
+    end
   end
 
   def seek_min([],current_min,_), do: current_min

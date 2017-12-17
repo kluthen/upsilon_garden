@@ -17,11 +17,21 @@ defmodule UpsilonGarden.GardenData.Influence do
         field :power, :integer
         embeds_many :components, UpsilonGarden.GardenData.Component
     end
+
+    def influence_type(infl) do 
+        case infl.type do
+            0 -> "Components"
+            1 -> "Well"
+            2 -> "Thermal"
+            3 -> "Plant"
+            4 -> "Event"
+        end
+    end
         
     def changeset(%UpsilonGarden.GardenData.Influence{} = influence, attrs \\ %{} ) do
         influence
-        |> cast(attrs, [:type, :event_id, :source_id, :plant_id, :ratio])
+        |> cast(attrs, [:type, :event_id, :source_id, :plant_id, :ratio,:power])
         |> cast_embed(:components)
-        |> validate_required([:type, :event_id, :source_id, :plant_id, :ratio, :components])
+        |> validate_required([:type, :event_id, :source_id, :plant_id, :ratio, :components,:power])
     end
 end

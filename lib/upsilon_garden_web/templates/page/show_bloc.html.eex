@@ -6,11 +6,14 @@
         "Stone"
     end %>
     <br/>
-        Components<br/>
-        <%= for component <- @bloc.components do %>
-                <%= component.quantity %> x <%= component.composition %> 
-            <br/>
-        <% end %>
+    Components<br/>
+    <%= for component <- @bloc.components do %>
+        <%= component.quantity %> x <%= component.composition %> <br/>
+    <% end %>
+    Influences<br/>
+    <%= for influence <- @bloc.influences do %>
+        <%= render "influence.html", influence: influence %>
+    <% end %>
         
 <% else %>
 No bloc data

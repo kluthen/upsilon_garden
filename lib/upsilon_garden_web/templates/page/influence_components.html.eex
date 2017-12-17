@@ -1,0 +1,3 @@
+<%= for component <- @influence.components do %>
+    <%= component.quantity * @influence.ratio %> x <%= component.composition %> <br/>
+<% end %>

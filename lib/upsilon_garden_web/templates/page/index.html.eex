@@ -28,5 +28,9 @@
 
     </div>
   </div>
+
 </div>
+  <pre>
+    <%= Poison.encode! @garden %>
+  </pre>
 

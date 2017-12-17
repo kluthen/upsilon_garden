@@ -33,6 +33,7 @@ defmodule UpsilonGardenWeb.PageController do
 
     bloc = GardenData.get_bloc(garden.data,String.to_integer(segment),String.to_integer(bloc))
 
+
     conn
     |> assign(:bloc, bloc)
     |> put_layout(false)

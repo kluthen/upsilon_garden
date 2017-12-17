@@ -1,0 +1,12 @@
+Type: <%= UpsilonGarden.GardenData.Influence.influence_type(@influence) %>
+<%= case @influence.type do 
+    0 -> 
+        render "influence_components.html", influence: @influence
+    1 ->
+        "Power: #{@influnce.power * @influence.ratio}"
+    2 ->
+        "Power: #{@influnce.power * @influence.ratio}"
+    _ -> 
+        ""
+    end
+%>
