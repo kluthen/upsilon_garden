@@ -57,6 +57,10 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
 
     create table(:plants) do
       add :name, :string
+      add :data, :maps
+      add :content, :maps
+      add :context, :maps
+      add :segment, :integer
       timestamps()
     end
 

@@ -2,7 +2,7 @@ defmodule UpsilonGarden.GardenData do
     use Ecto.Schema
     import Ecto.Changeset
     alias UpsilonGarden.{Garden,Source}
-    alias UpsilonGarden.GardenData.{Segment}
+    alias UpsilonGarden.GardenData.{Segment,Influence}
 
     embedded_schema do 
         embeds_many :segments, UpsilonGarden.GardenData.Segment
@@ -12,6 +12,39 @@ defmodule UpsilonGarden.GardenData do
         data
         |> cast_embed(:segments)
         |> validate_required([:segments])
+    end
+
+    # returns data.
+    def set_influence(data, x,y, influence) do 
+        # enforce full power
+        set_influence(data,x,y,1,0,influence)
+    end
+    
+    # returns data.
+    def set_influence(data, x,y, power, dist, influence) do 
+        segment = Enum.at(data.segments, x) 
+        bloc = Enum.at(segment.blocs, y)
+        if bloc.type == UpsilonGarden.GardenData.Bloc.stone() do 
+        # leave it alone if bloc is a stone ;)
+            data
+        else
+            influence = Map.put(influence, :ratio, Float.round(1 - (dist/(power+1)),2))
+            influences = [influence | bloc.influences]
+            bloc = Map.put(bloc, :influences, influences)
+            segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))
+            Map.put(data, :segments, List.replace_at(data.segments,x, segment))
+        end
+    end
+
+    def drop_influence(data, match) do 
+        segments = Enum.map(data.segments, fn segment ->
+            blocs = Enum.map(segment.blocs, fn bloc ->
+                influences = Enum.reject(bloc.influences, &Influence.match?(&1, match))
+                Map.put(bloc, :influences, influences)
+            end)
+            Map.put(segment, :blocs, blocs)
+        end)
+        Map.put(data, :segments, segments)
     end
 
     # might not be needed ... on_replace: :delete was set. 

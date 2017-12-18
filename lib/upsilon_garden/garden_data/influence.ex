@@ -27,6 +27,24 @@ defmodule UpsilonGarden.GardenData.Influence do
             4 -> "Event"
         end
     end
+
+    # probably nicer way to do this ... 
+    def match?(influence, reference) do 
+        if influence.type != reference.type do 
+            false
+        else
+            cond do 
+                influence.type < 3 -> 
+                    influence.source_id == reference.source_id
+                influence.type == 3 ->
+                    influence.plant_id == reference.plant_id
+                influence.type == 4 ->
+                    influence.event_id == reference.event_id
+                true ->
+                    false # ahah
+            end
+        end
+    end
         
     def changeset(%UpsilonGarden.GardenData.Influence{} = influence, attrs \\ %{} ) do
         influence

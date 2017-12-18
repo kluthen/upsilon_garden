@@ -1,7 +1,7 @@
 defmodule UpsilonGarden.Source do
   use Ecto.Schema
   import Ecto.Changeset
-  alias UpsilonGarden.{Source,Repo}
+  alias UpsilonGarden.{Source,Repo,GardenData}
   alias UpsilonGarden.GardenData.{Influence,Component}
 
   def component, do: 0
@@ -86,9 +86,8 @@ defmodule UpsilonGarden.Source do
         }
     end    
     # add pattern selection here centered on segment_id,bloc_id 
-    segments = generate_influences([{segment_id, bloc_id}], radiance, segments, base_influence )
-
     Map.put(data, :segments, segments)
+    generate_influences(data, [{segment_id, bloc_id}], radiance, base_influence )
   end
 
   def generate_components([], _), do: nil
@@ -100,53 +99,39 @@ defmodule UpsilonGarden.Source do
     generate_components(rest, source)
   end
 
-  def generate_influences(targets,power,segments, base_influence) do 
-    min_x = max(seek_min(targets, length(segments), 0) - power, 0)
-    min_y = max(seek_min(targets, length(segments), 1) - power, 0)
-    max_x = min(seek_max(targets, 0, 0) + power, length(segments))
-    max_y = min(seek_max(targets, 0, 1) + power, length(Enum.at(segments,0).blocs))
+  def generate_influences(data, targets,power, base_influence) do 
+    min_x = max(seek_min(targets, length(data.segments), 0) - power, 0)
+    min_y = max(seek_min(targets, length(data.segments), 1) - power, 0)
+    max_x = min(seek_max(targets, 0, 0) + power, length(data.segments))
+    max_y = min(seek_max(targets, 0, 1) + power, length(Enum.at(data.segments,0).blocs))
 
-    generate_row_influences(min_y,max_y, min_x,max_x, targets, segments, power, base_influence)
+    generate_row_influences(data,min_y,max_y, min_x,max_x, targets, power, base_influence)
   end
 
-  def generate_row_influences(y, max_y, min_x, max_x, targets, segments, power, base_influence) do 
+  def generate_row_influences(data,y, max_y, min_x, max_x, targets, power, base_influence) do 
     if y < max_y do 
-      segments = generate_cell_influences(y , min_x, max_x, targets, segments, power, base_influence)
-      generate_row_influences(y+1, max_y, min_x, max_x, targets, segments, power, base_influence)
+      segments = generate_cell_influences(data,y , min_x, max_x, targets, power, base_influence)
+      generate_row_influences(data,y+1, max_y, min_x, max_x, targets, power, base_influence)
     else 
-      segments
+      data
     end
   end
 
-  def generate_cell_influences(y, x, max_x, targets, segments, power, base_influence) do 
+  def generate_cell_influences(data, y, x, max_x, targets, power, base_influence) do 
     if x < max_x do 
       dist = distance(targets, 99, x, y)
       if dist <= power do 
         # update bloc/segment.
-        segments = set_influence(x,y,segments, power, dist, base_influence)
-        generate_cell_influences(y, x+1, max_x, targets, segments, power, base_influence)
+        data = GardenData.set_influence(data,x,y, power, dist, base_influence)
+        generate_cell_influences(data,y, x+1, max_x, targets, power, base_influence)
       else
-        generate_cell_influences(y, x+1, max_x, targets, segments, power, base_influence)
+        generate_cell_influences(data,y, x+1, max_x, targets, power, base_influence)
       end
     else
-      segments
+      data
     end
   end
 
-  def set_influence(x,y,segments, power, dist, influence) do 
-    segment = Enum.at(segments, x) 
-    bloc = Enum.at(segment.blocs, y)
-    if bloc.type == UpsilonGarden.GardenData.Bloc.stone() do 
-      # leave it alone if bloc is a stone ;)
-      segments
-    else
-      influence = Map.put(influence, :ratio, Float.round(1 - (dist/(power+1)),2))
-      influences = [influence | bloc.influences]
-      bloc = Map.put(bloc, :influences, influences)
-      segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))
-      List.replace_at(segments,x, segment)
-    end
-  end
 
   def seek_min([],current_min,_), do: current_min
 

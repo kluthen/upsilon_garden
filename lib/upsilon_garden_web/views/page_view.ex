@@ -2,7 +2,6 @@ defmodule UpsilonGardenWeb.PageView do
   use UpsilonGardenWeb, :view
 
   def bloc_classes(active, bloc) do 
-    active = true
     if active do 
       res = []
       res = if length(bloc.sources) > 0 do 
