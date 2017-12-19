@@ -22,18 +22,23 @@ defmodule UpsilonGarden.Garden do
 
 
   def create(garden, context \\ %{} ) do 
+    # Using Select values for provided context.
     context = Map.merge(GardenContext.default, context)
     |> GardenContext.roll_dices
 
     Repo.transaction( fn ->
+      # Store the new garden.
       garden = garden
       |> change(dimension: context.dimension)
       |> put_embed(:context, context)
       |> Repo.insert!(returning: true)
       
+      # Generate the garden according to provided context
+      # Create sources. Activate 3 segments.
       data = GardenData.generate(garden,context)
       |> GardenData.activate([3,4,5])
 
+      # Store updated garden.
       garden
       |> change()
       |> put_embed(:data, data)
@@ -43,15 +48,21 @@ defmodule UpsilonGarden.Garden do
 
   def create_plant(garden, segment, plant_ctx) do 
     Repo.transaction( fn ->
+      # Build up a new plant associated to this garden.
+      # Generate it based on seed context.
       plant = garden
       |> build_assoc(:plant)
       |> Plant.create(garden.data, segment, plant_ctx)
       
+      # Integrate plant influence onto garden 
+      # (What it rejects)
       influence = %GardenData.Influence{
         plant_id: plant.id,
         type: 3
       }
       data = setup_plant(garden.data, plant.roots, influence)
+
+      # Update garden with new data.
       garden
       |> change()
       |> put_embed(:data,data)

@@ -18,7 +18,11 @@ defmodule UpsilonGarden.Plant do
 
   def create(plant, garden_data, segment, plant_ctx) do 
     content = %PlantContent{}
-    data = PlantData.roll(garden_data, segment,plant_ctx)
+    plant_ctx = Map.merge(PlantContext.default, plant_ctx)
+    |> PlantContext.roll_dices
+    # Based on seed, create an actual root network, and setup objectives for next stage.
+    # Create also structure of the plant and most probably nexts stages of evolutions.
+    data = PlantData.generate(garden_data, segment,plant_ctx)
 
     plant
     |> changeset(%{segment: segment, name: "My Plant"})
