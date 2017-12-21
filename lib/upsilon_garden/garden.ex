@@ -21,6 +21,11 @@ defmodule UpsilonGarden.Garden do
   end
 
 
+  @doc """
+    Assemble a GardenContext, and roll a new Garden according to this context;
+    Ensure 3 segments are active for user.
+    Rolls sources and update Garden for it.
+  """
   def create(garden, context \\ %{} ) do 
     # Using Select values for provided context.
     context = Map.merge(GardenContext.default, context)
@@ -46,6 +51,11 @@ defmodule UpsilonGarden.Garden do
     end)
   end
 
+  @doc """
+    Generate a new Plant according to provided PlantContext
+    Insert it on provided Garden segment
+    Sets up plant influence on GardenData
+  """
   def create_plant(garden, segment, plant_ctx) do 
     Repo.transaction( fn ->
       # Build up a new plant associated to this garden.
@@ -72,11 +82,18 @@ defmodule UpsilonGarden.Garden do
 
   def setup_plant(garden_data, [],_), do: garden_data
 
+  @doc """
+    Seek blocs where influence of the plant should be added.
+    Update GardenData and returns it.
+  """
   def setup_plant(garden_data, [root|roots], influence) do 
     GardenData.set_influence(garden_data, root.pos_x, root.pos_y, influence)
     |> setup_plant(roots, influence)
   end
 
+  @doc """
+    Remove a plant influence from garden. 
+  """
   def tear_down_plant(garden, plant_id) do 
     match = %UpsilonGarden.GardenData.Influence{
       type: 3,
@@ -89,8 +106,6 @@ defmodule UpsilonGarden.Garden do
     |> put_embed(:data,data)
     |> Repo.update!(returning: true)
   end
-
-
 
   @doc false
   def changeset(%Garden{} = garden, attrs) do

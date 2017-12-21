@@ -20,6 +20,10 @@ defmodule UpsilonGarden.Source do
     timestamps()
   end
 
+  @doc """
+    Seek an "appropriate" source origin, and set sources up.
+    Updates and return GardenData with added influence of the new source. 
+  """
   def create(source, data, context) do 
     # roll segment
     segment_id = :rand.uniform(context.dimension - 1)
@@ -90,8 +94,12 @@ defmodule UpsilonGarden.Source do
     generate_influences(data, [{segment_id, bloc_id}], radiance, base_influence )
   end
 
+
   def generate_components([], _), do: nil
   
+  @doc """
+    Select and add components to database. Link them to source.
+  """
   def generate_components([%Component{} = compo|rest], source) do 
     Ecto.build_assoc(source, :components)
     |> change(component: compo.composition, number: compo.quantity)
@@ -99,6 +107,11 @@ defmodule UpsilonGarden.Source do
     generate_components(rest, source)
   end
 
+  @doc """
+    Generate Influence; update GardenData with them. 
+    Read through the garden layout and select a "zone of interest"
+    (that is, a square around targets enlarged by radiance:power)
+  """
   def generate_influences(data, targets,power, base_influence) do 
     min_x = max(seek_min(targets, length(data.segments), 0) - power, 0)
     min_y = max(seek_min(targets, length(data.segments), 1) - power, 0)
@@ -108,6 +121,9 @@ defmodule UpsilonGarden.Source do
     generate_row_influences(data,min_y,max_y, min_x,max_x, targets, power, base_influence)
   end
 
+  @doc """
+    Updates row by row for influences.
+  """
   def generate_row_influences(data,y, max_y, min_x, max_x, targets, power, base_influence) do 
     if y < max_y do 
       segments = generate_cell_influences(data,y , min_x, max_x, targets, power, base_influence)
@@ -117,6 +133,11 @@ defmodule UpsilonGarden.Source do
     end
   end
 
+  @doc """
+    For each cell in a row, check whether it's near enough or not. 
+    If it's near a target, generate an influence, with appropriate rate (ratio distance to target)
+    Add it to GardenData.
+  """
   def generate_cell_influences(data, y, x, max_x, targets, power, base_influence) do 
     if x < max_x do 
       dist = distance(targets, 99, x, y)
@@ -133,8 +154,14 @@ defmodule UpsilonGarden.Source do
   end
 
 
+  
   def seek_min([],current_min,_), do: current_min
 
+  @doc """
+    Seek the smallest item;
+    position: {x,y}
+    pos reflect which we should use.
+  """
   def seek_min([position|targets], current_min, pos) do 
     if elem(position,pos) < current_min do 
       seek_min(targets, elem(position,pos), pos)
@@ -144,7 +171,12 @@ defmodule UpsilonGarden.Source do
   end
 
   def seek_max([],current_max,_), do: current_max
-  
+   
+  @doc """
+    Seek the highest item;
+    position: {x,y}
+    pos reflect which we should use.
+  """
   def seek_max([position|targets], current_max, pos) do 
     if elem(position,pos) > current_max do 
       seek_max(targets, elem(position,pos), pos)
@@ -155,6 +187,12 @@ defmodule UpsilonGarden.Source do
 
   def distance([],max_distance,_,_), do: max_distance
 
+  @doc """
+    Calculate distance to the nearest of the targets. 
+    Return nearest distance. 
+    Use a simple distance method. 
+    Should be updated to reflect positions of stones bloc
+  """
   def distance([{to_x,to_y}|rest], max_distance, x,y) do 
       dist = abs(x - to_x) + abs( y - to_y )
       if dist < max_distance do 

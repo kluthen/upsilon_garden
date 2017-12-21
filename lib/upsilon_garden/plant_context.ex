@@ -21,7 +21,7 @@ defmodule UpsilonGarden.PlantContext do
 
         # kind of orientation, sort of. 
         # just tell whether it's bound to bottom (0)
-        # or just everywhere (1)
+        # or just everywhere (0.5)
         field :roots_fuzyness_range, {:array, :float}
         # tell maximum distance from a prime_root a root is allowed to.
         field :roots_travel_range, {:array, :integer}

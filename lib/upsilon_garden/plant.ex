@@ -16,6 +16,10 @@ defmodule UpsilonGarden.Plant do
   end
   
 
+  @doc """
+    Assemble a PlantContext with provided informations and sets up the plant
+    Store it in DB.
+  """
   def create(plant, garden_data, segment, plant_ctx) do 
     content = %PlantContent{}
     plant_ctx = Map.merge(PlantContext.default, plant_ctx)

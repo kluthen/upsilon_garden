@@ -14,13 +14,18 @@ defmodule UpsilonGarden.GardenData do
         |> validate_required([:segments])
     end
 
-    # returns data.
+    @doc """
+        helper for set_influence, ensure ratio is set to 1
+    """
     def set_influence(data, x,y, influence) do 
         # enforce full power
         set_influence(data,x,y,1,0,influence)
     end
     
-    # returns data.
+    @doc """
+        Seek bloc, and apply Influence with a ratio based on power/distance relationship.
+        Update and return GardenData.
+    """
     def set_influence(data, x,y, power, dist, influence) do 
         segment = Enum.at(data.segments, x) 
         bloc = Enum.at(segment.blocs, y)
@@ -36,6 +41,11 @@ defmodule UpsilonGarden.GardenData do
         end
     end
 
+    @doc """
+        Seek influence on all bloc matching provided Influence.
+        If they match ( type_id / <influencer>_id ), influence will be droped 
+        Update and return GardenData.
+    """
     def drop_influence(data, match) do 
         segments = Enum.map(data.segments, fn segment ->
             blocs = Enum.map(segment.blocs, fn bloc ->
@@ -63,6 +73,10 @@ defmodule UpsilonGarden.GardenData do
         put_embed(cs, :segments, new_segments)
     end
 
+    @doc """
+        Mark targets segments as active.
+        Update and return GardenData.
+    """
     def activate(data, targets) do 
         new_segments = for segment <- data.segments do 
             if segment.position in targets do 
@@ -95,6 +109,11 @@ defmodule UpsilonGarden.GardenData do
         end
     end
 
+    @doc """
+        From a GardenContext, build up structural garden.
+        Fills segments with blocs and blocs with Components according to the context.
+        Once done, seek sources out, place them and update GardenData with their influence.
+    """
     def generate(garden, context) do 
         data = %UpsilonGarden.GardenData{}
         segments = for pos <- 0..(context.dimension - 1) do 
@@ -120,6 +139,10 @@ defmodule UpsilonGarden.GardenData do
         generate_sources(garden,data,context)
     end
 
+
+    @doc """
+        Roll a source, store it in DB and add it influence to GardenData.
+    """
     def generate_sources(%Garden{} = garden, data, context) do 
         targets = Enum.to_list(0..(Enum.random(context.sources_range)))
         generate_sources(targets,garden,data,context)    

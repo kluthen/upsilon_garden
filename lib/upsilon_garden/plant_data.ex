@@ -10,7 +10,12 @@ defmodule UpsilonGarden.PlantData do
         embeds_many :objectives, {:array, {:array, Component}}
     end
 
+    @doc """
+        Based on PlantContext, generate a build structural plant.
+        ATM, it will mostly generate roots, seek how to position them. 
+    """
     def generate(garden_data, segment, plant_ctx) do 
+        
         %PlantData{}
     end
 
