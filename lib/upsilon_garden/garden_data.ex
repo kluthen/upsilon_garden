@@ -27,15 +27,28 @@ defmodule UpsilonGarden.GardenData do
         Update and return GardenData.
     """
     def set_influence(data, x,y, power, dist, influence) do 
+        update_bloc(data,x,y, fn bloc -> 
+            influence = Map.put(influence, :ratio, Float.round(1 - (dist/(power+1)),2))
+            influences = [influence | bloc.influences]
+            Map.put(bloc, :influences, influences)
+        end )
+    end
+
+    @doc """
+        Update a bloc located by x,y with provided function.
+        fn(bloc) -> updated_bloc
+
+        Note: won't work on bloc typed stone. 
+        returns updated garden data
+    """
+    def update_bloc(data,x,y, update_function) do 
         segment = Enum.at(data.segments, x) 
         bloc = Enum.at(segment.blocs, y)
         if bloc.type == UpsilonGarden.GardenData.Bloc.stone() do 
         # leave it alone if bloc is a stone ;)
             data
         else
-            influence = Map.put(influence, :ratio, Float.round(1 - (dist/(power+1)),2))
-            influences = [influence | bloc.influences]
-            bloc = Map.put(bloc, :influences, influences)
+            bloc = update_function.(bloc)
             segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))
             Map.put(data, :segments, List.replace_at(data.segments,x, segment))
         end

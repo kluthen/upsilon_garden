@@ -96,7 +96,7 @@ defmodule UpsilonGarden.Garden do
   """
   def tear_down_plant(garden, plant_id) do 
     match = %UpsilonGarden.GardenData.Influence{
-      type: 3,
+      type: UpsilonGarden.GardenData.Influence.plant(),
       plant_id: plant_id
     }
     # drop all influences related to this plant. 
