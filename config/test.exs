@@ -7,13 +7,6 @@ config :upsilon_garden, UpsilonGardenWeb.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :debug
 
-# Configure your database
-config :upsilon_garden, UpsilonGarden.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "gardener",
-  password: "iamaloftygardenerfromearth",
-  database: "garden_test",
-  hostname: "46.101.225.43",
-  pool: Ecto.Adapters.SQL.Sandbox
+import_config "test.secret.exs"

@@ -48,11 +48,6 @@ config :logger, :console, format: "[$level] $message\n"
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
-# Configure your database
-config :upsilon_garden, UpsilonGarden.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "gardener",
-  password: "iamaloftygardenerfromearth",
-  database: "garden_dev",
-  hostname: "46.101.225.43",
-  pool_size: 10
+
+import_config "dev.secret.exs"
+
