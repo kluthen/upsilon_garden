@@ -87,6 +87,7 @@ defmodule UpsilonGarden.Garden do
     Update GardenData and returns it.
   """
   def setup_plant(garden_data, [root|roots], influence) do 
+    # update influence with appropriate informations ...
     GardenData.set_influence(garden_data, root.pos_x, root.pos_y, influence)
     |> setup_plant(roots, influence)
   end

@@ -111,7 +111,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     end
 
     def generate_absorption(plant_root_ctx) do 
-        components = for i <- 0..(plant_root_ctx.absorption_count) do 
+        components = for i <- 1..(plant_root_ctx.absorption_count) do 
             Enum.random(plant_root_ctx.absorption_range)
         end
 
@@ -127,7 +127,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     end
 
     def generate_rejection(plant_root_ctx) do 
-        components = for i <- 0..(plant_root_ctx.rejection_count) do 
+        components = for i <- 1..(plant_root_ctx.rejection_count) do 
             Enum.random(plant_root_ctx.rejection_range)
         end
 

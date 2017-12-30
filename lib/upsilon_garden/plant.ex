@@ -33,11 +33,11 @@ defmodule UpsilonGarden.Plant do
 
     # Based on seed, create an actual root network, and setup objectives for next stage.
     # Create also structure of the plant and most probably nexts stages of evolutions.
-    data = PlantData.generate(garden_data, segment, plant, plant_ctx)
+    {garden_data,plant_data} = PlantData.generate(garden_data, segment, plant, plant_ctx)
     
     plant
     |> change()
-    |> put_embed(:data, data)
+    |> put_embed(:data, plant_data)
     |> Repo.update!(returning: true)
   end
 
