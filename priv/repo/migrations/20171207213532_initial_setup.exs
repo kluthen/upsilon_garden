@@ -61,6 +61,7 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
       add :content, :map
       add :context, :map
       add :segment, :integer
+      add :garden_id, references(:gardens, on_delete: :delete_all)
       timestamps()
     end
 

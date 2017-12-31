@@ -1,7 +1,7 @@
 defmodule UpsilonGarden.Plant do
   use Ecto.Schema
   import Ecto.Changeset
-  alias UpsilonGarden.{Plant,PlantContent,PlantContext,PlantData,Repo}
+  alias UpsilonGarden.{Plant,Garden,PlantContent,PlantContext,PlantData,Repo}
 
 
   schema "plants" do
@@ -11,6 +11,8 @@ defmodule UpsilonGarden.Plant do
     embeds_one :content, PlantContent, on_replace: :delete
     embeds_one :context, PlantContext, on_replace: :delete
     embeds_one :data, PlantData, on_replace: :delete
+
+    belongs_to :garden, Garden
 
     timestamps()
   end
@@ -34,6 +36,7 @@ defmodule UpsilonGarden.Plant do
     # Based on seed, create an actual root network, and setup objectives for next stage.
     # Create also structure of the plant and most probably nexts stages of evolutions.
     plant_data = PlantData.generate(garden_data, segment, plant, plant_ctx)
+    |> Map.put(:id, nil)
     
     plant
     |> change()

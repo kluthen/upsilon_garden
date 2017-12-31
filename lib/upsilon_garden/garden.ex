@@ -15,6 +15,7 @@ defmodule UpsilonGarden.Garden do
 
     belongs_to :user, UpsilonGarden.User
     has_many :events, UpsilonGarden.Event 
+    has_many :plants, UpsilonGarden.Plant
     has_many :sources, UpsilonGarden.Source
 
     timestamps()
@@ -42,6 +43,7 @@ defmodule UpsilonGarden.Garden do
       # Create sources. Activate 3 segments.
       data = GardenData.generate(garden,context)
       |> GardenData.activate([3,4,5])
+      |> Map.put(:id, nil)
 
       # Store updated garden.
       garden
@@ -61,7 +63,7 @@ defmodule UpsilonGarden.Garden do
       # Build up a new plant associated to this garden.
       # Generate it based on seed context.
       plant = garden
-      |> build_assoc(:plant)
+      |> build_assoc(:plants)
       |> Plant.create(garden.data, segment, plant_ctx)
       
       # Integrate plant influence onto garden 
@@ -70,7 +72,9 @@ defmodule UpsilonGarden.Garden do
         plant_id: plant.id,
         type: 3
       }
-      data = setup_plant(garden.data, plant.roots, influence)
+
+      data = setup_plant(garden.data, plant.data.roots, influence)
+      |> Map.put(:id, nil)
 
       # Update garden with new data.
       garden
@@ -88,7 +92,10 @@ defmodule UpsilonGarden.Garden do
   """
   def setup_plant(garden_data, [root|roots], influence) do 
     # update influence with appropriate informations ...
-    GardenData.set_influence(garden_data, root.pos_x, root.pos_y, influence)
+    ninfluence=influence
+    |> Map.put(:components, root.rejecters)
+
+    GardenData.set_influence(garden_data, root.pos_x, root.pos_y, ninfluence)
     |> setup_plant(roots, influence)
   end
 
@@ -102,6 +109,8 @@ defmodule UpsilonGarden.Garden do
     }
     # drop all influences related to this plant. 
     data = GardenData.drop_influence(garden.data, match)
+    |> Map.put(:id, nil)
+
     garden
     |> change()
     |> put_embed(:data,data)

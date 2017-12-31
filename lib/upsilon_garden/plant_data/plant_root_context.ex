@@ -113,7 +113,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         end
 
         {_, components} = Enum.map_reduce(components, %{}, fn comp, acc ->
-            Map.update(acc, comp, 1, &(&1 + 1)) 
+            {comp,Map.update(acc, comp, 1, &(&1 + 1))}
         end)
 
         components = for {k,v} <- components do 
@@ -129,7 +129,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         end
 
         {_, components} = Enum.map_reduce(components, %{}, fn comp, acc ->
-            Map.update(acc, comp, 1, &(&1 + 1)) 
+            {comp,Map.update(acc, comp, 1, &(&1 + 1))}
         end)
 
         components = for {k,v} <- components do 

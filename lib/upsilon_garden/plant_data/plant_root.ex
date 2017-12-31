@@ -38,8 +38,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         
 
         greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
-        min_x = plant_data.segment - (greater_width - 1) / 2
-        max_x = plant_data.segment + (greater_width - 1) / 2
+        min_x = trunc(plant_data.segment - (greater_width - 1) / 2)
+        max_x = round(plant_data.segment + (greater_width - 1) / 2)
 
         valid_blocs = for depth <- 0..(root_ctx.depth - 1) do 
             {_, {_,last,result}} = Enum.map_reduce(min_x..max_x, {false,[], []}, fn x, {in_range, current_list, result} = acc ->

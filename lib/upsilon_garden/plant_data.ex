@@ -7,7 +7,6 @@ defmodule UpsilonGarden.PlantData do
 
     embedded_schema do 
         embeds_many :roots, PlantRoot
-        embeds_many :objectives, {:array, {:array, Component}}
         field :segment, :integer
     end
 

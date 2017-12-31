@@ -70,6 +70,35 @@ defmodule UpsilonGarden.GardenData do
         Map.put(data, :segments, segments)
     end
 
+    @doc """
+        Seek within Garden blocs that have matching influence.
+        Return [{x,y}]
+    """
+    def seek_influence(data, match) do 
+        {_,segments} = Enum.map_reduce(data.segments, [], fn segment,acc ->
+            {_,blocs} = Enum.map_reduce(segment.blocs, [], fn bloc,acc ->
+                influences = Enum.filter(bloc.influences, &Influence.match?(&1, match))
+                if length(influences) > 0 do 
+                    {bloc,[bloc.position|acc]}
+                else
+                    {bloc, acc}
+                end
+            end)
+            if length(blocs) > 0 do 
+                {segment,[{segment.position,blocs}|acc]}
+            else
+                {segment,acc}
+            end
+        end)
+
+        for {seg, blocs} <- segments do 
+            for b <- blocs do 
+                {seg,b}
+            end
+        end
+        |> List.flatten
+    end
+
     # might not be needed ... on_replace: :delete was set. 
     def change_activate(cs, data, targets) do
         # expect cs to be a Garden Data changeset. 
