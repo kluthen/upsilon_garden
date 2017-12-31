@@ -38,13 +38,13 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         
 
         greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
-        min_x = segment - (greater_width - 1) / 2
-        max_x = segment + (greater_width - 1) / 2
+        min_x = plant_data.segment - (greater_width - 1) / 2
+        max_x = plant_data.segment + (greater_width - 1) / 2
 
         valid_blocs = for depth <- 0..(root_ctx.depth - 1) do 
             {_, {_,last,result}} = Enum.map_reduce(min_x..max_x, {false,[], []}, fn x, {in_range, current_list, result} = acc ->
                 
-                current_in_range = bloc_is_in_range?(x,depth,max_top_width,max_bottom_width,root_ctx.depth, plant_data.segment)
+                current_in_range = bloc_is_in_range?(x,depth,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, plant_data.segment)
                 current_in_range = current_in_range and GardenData.get_bloc(garden_data, x,depth).type != Bloc.stone()
 
                 if current_in_range do 
@@ -67,25 +67,23 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         expected_root_count = round(Enum.reduce( valid_blocs, 0, fn d,acc -> length(d) + acc end) * root_ctx.fill_rate)
         
         # now fill 
-        fill_root(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
+        fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
     end
 
-    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when x < 0 or y > max_depth do 
+    defp bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do 
         false
     end
     
     defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when (max_top_width - max_bottom_width) <= 2 and y <= max_depth do 
-        greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
+        greater_width = max(max_top_width, max_bottom_width)
         segment - (greater_width - 1) / 2 <= x and x <= segment + (greater_width - 1) / 2
     end
 
-    @doc """
-        Tell whether provided bloc is in range of the plant based on its properties
-        returns true or false.
-    """
+    #    Tell whether provided bloc is in range of the plant based on its properties
+    #    returns true or false.
     defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when y <= max_depth do 
-        common_width = min(root_ctx.max_top_width, root_ctx.max_bottom_width) + 2
-        max_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
+        common_width = min(max_top_width, max_bottom_width) + 2
+        max_width = max(max_top_width, max_bottom_width)
         cond do
             segment - (common_width - 1) / 2 <= x and x <= segment + (common_width - 1) / 2 ->
                 true
@@ -119,12 +117,10 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     defp fill_roots(_garden_data, plant_data, [], _root_ctx, _valid_blocs, _root_count,_basic_root), do: {plant_data,[]}
     defp fill_roots(_garden_data, plant_data, potential, _root_ctx, _valid_blocs, 0,_basic_root), do: {plant_data,potential}
 
-    @doc """
-        Roll a potential, removes it from the stack.
-        create a root at rolled spot, add to potential newly available and valid bloc with appropriate probability.
-        continue up until expected root count has been reached. 
-        returns {plant_data,new_potentials}
-    """
+    #    Roll a potential, removes it from the stack.
+    #    create a root at rolled spot, add to potential newly available and valid bloc with appropriate probability.
+    #    continue up until expected root count has been reached. 
+    #    returns {plant_data,new_potentials}
     defp fill_roots(%GardenData{} = garden_data, %PlantData{} = plant_data, potential, %PlantRootContext{} = root_ctx, valid_blocs, root_count, %PlantRoot{} = basic_root) do 
         # Roll a new root position !
         {r_x,r_y} = Enum.random(potential)
@@ -156,7 +152,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         horizontal_ratio =  1 + trunc(root_ctx.orientation * 10)
         vertical_ratio = 1 + (10 - trunc(root_ctx.orientation * 10))
 
-        npots = for {x,y} = pot <- neighbours do 
+        npots = for {_x,y} = pot <- neighbours do 
             if y == r_y do 
                 for _ <- 0..horizontal_ratio do 
                     pot
@@ -179,10 +175,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         is_valid?({x,y-1}, valid_blocs)
     end
     
-    @doc """
-        Tell whether a targeted bloc is valid or not. 
-        Valid blocs is a list of list of valid blocs. Each item of the englobing list represent a depth level. 
-    """
+    # Tell whether a targeted bloc is valid or not. 
+    # Valid blocs is a list of list of valid blocs. Each item of the englobing list represent a depth level. 
     defp is_valid?({x,_y}, [valid_blocs|_]) do 
         x in valid_blocs
     end

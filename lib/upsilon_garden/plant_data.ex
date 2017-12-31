@@ -1,8 +1,8 @@
 defmodule UpsilonGarden.PlantData do 
     use Ecto.Schema
     import Ecto.Changeset
-    alias UpsilonGarden.{PlantData,PlantContext,GardenData}
-    alias UpsilonGarden.GardenData.{Component,Influence,Bloc}
+    alias UpsilonGarden.{Plant,PlantData,PlantContext,GardenData}
+    alias UpsilonGarden.GardenData.{Component}
     alias UpsilonGarden.PlantData.{PlantRoot}
 
     embedded_schema do 
@@ -17,7 +17,7 @@ defmodule UpsilonGarden.PlantData do
         ATM, it will mostly generate roots, seek how to position them. 
 
 
-        returns updated garden data.
+        returns updated plant data.
         """
     def generate(%GardenData{} = garden_data, segment, %Plant{} = plant, %PlantContext{} = plant_ctx) do 
         plant_data = %PlantData{
@@ -26,7 +26,7 @@ defmodule UpsilonGarden.PlantData do
 
         # Note: we expect here that 0,0 won't be a stone, ofcourse ...
 
-        {plant_data, potential} = PlantRoot.fill_influence(garden_data, plant_data, [{segment,0}], plant_ctx.prime_root)
+        {plant_data, potential} = PlantRoot.generate_roots(garden_data, plant_data, [{segment,0}], plant_ctx.prime_root)
         {plant_data, _} = PlantRoot.generate_roots(garden_data, plant_data, potential, plant_ctx.secondary_root)
 
         # That's it for the moment. 
@@ -34,7 +34,7 @@ defmodule UpsilonGarden.PlantData do
     end
 
 
-    def changeset(%PlantData{} = data, attrs \\ %{}) do 
+    def changeset(%PlantData{} = data, _attrs \\ %{}) do 
         data
         |> cast_embed(:roots)
         |> validate_required([:roots])

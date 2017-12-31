@@ -2,7 +2,7 @@ defmodule UpsilonGarden.Garden do
   use Ecto.Schema
   import Ecto
   import Ecto.Changeset
-  alias UpsilonGarden.{Plant,Garden,GardenContext,GardenData,GardenProjection,Repo,PlantContext}
+  alias UpsilonGarden.{Plant,Garden,GardenContext,GardenData,GardenProjection,Repo}
 
 
   schema "gardens" do

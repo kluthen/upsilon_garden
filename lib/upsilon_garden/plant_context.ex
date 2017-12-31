@@ -26,7 +26,7 @@ defmodule UpsilonGarden.PlantContext do
         |> Map.put(:secondary_root, PlantRootContext.roll_dices(plant_ctx.secondary_root))
     end
 
-    def changeset(%PlantContext{} = root, attrs \\ %{}) do 
+    def changeset(%PlantContext{} = root, _attrs \\ %{}) do 
         root
         |> cast_embed(:prime_root)
         |> cast_embed(:secondary_root)

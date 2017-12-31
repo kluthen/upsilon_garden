@@ -9,7 +9,7 @@ defmodule UpsilonGarden.PlantContent do
     def trunc_out, do: 2
 
     embedded_schema do 
-        embeds_many :contents, UpsilonGarden.GardenData.Component
+        embeds_many :contents, Component
     end
 
     def changeset(%PlantContent{} = root, attrs \\ %{}) do 

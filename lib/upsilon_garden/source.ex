@@ -126,7 +126,7 @@ defmodule UpsilonGarden.Source do
   """
   def generate_row_influences(data,y, max_y, min_x, max_x, targets, power, base_influence) do 
     if y < max_y do 
-      segments = generate_cell_influences(data,y , min_x, max_x, targets, power, base_influence)
+      data = generate_cell_influences(data,y , min_x, max_x, targets, power, base_influence)
       generate_row_influences(data,y+1, max_y, min_x, max_x, targets, power, base_influence)
     else 
       data

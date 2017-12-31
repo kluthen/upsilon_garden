@@ -85,7 +85,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             orientation_range: prepare_range([{0.5,5},{0.3,1},{0.7,1}]),
             fill_rate_range: prepare_range([{0.5,5},{0.6,5},{0.4,5}]),
             depth_range: prepare_range([{3,5},{2,3}]),
-            max_top_width_range: prepare_range([{3,5}{2,3}]),
+            max_top_width_range: prepare_range([{3,5},{2,3}]),
             max_bottom_width_range: prepare_range([{1,1}]),
             root_mode_range: prepare_range([{0,5},{1,3},{2,1}]),
         }
@@ -108,7 +108,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     end
 
     def generate_absorption(plant_root_ctx) do 
-        components = for i <- 1..(plant_root_ctx.absorption_count) do 
+        components = for _ <- 1..(plant_root_ctx.absorption_count) do 
             Enum.random(plant_root_ctx.absorption_range)
         end
 
@@ -124,7 +124,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     end
 
     def generate_rejection(plant_root_ctx) do 
-        components = for i <- 1..(plant_root_ctx.rejection_count) do 
+        components = for _ <- 1..(plant_root_ctx.rejection_count) do 
             Enum.random(plant_root_ctx.rejection_range)
         end
 
