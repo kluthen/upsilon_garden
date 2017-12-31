@@ -12,7 +12,25 @@
         else
             "inactive"
         end
-    %>"><center><%= @segment.position %></center></div>
+    %>"><center><%= @segment.position %></center>
+    <%= if Map.has_key?(@plants, @segment.position) do %>
+        <center>
+        <br/><br/>*<br/>V<br/>V<br/>V<br/>
+        V
+        V
+        <br/>
+        V
+        V
+        V
+        <br/>
+        V
+        V
+        </center>
+    <% else %>
+
+    <% end %>
+    </div>
+    
     <div class="ground_level"> </div>
     <div class="ground">
         <%= for bloc <- @segment.blocs do %>

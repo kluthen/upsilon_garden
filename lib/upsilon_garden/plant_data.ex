@@ -8,6 +8,7 @@ defmodule UpsilonGarden.PlantData do
     embedded_schema do 
         embeds_many :roots, PlantRoot
         field :segment, :integer
+        field :plant_id, :integer
     end
 
 
@@ -20,7 +21,8 @@ defmodule UpsilonGarden.PlantData do
         """
     def generate(%GardenData{} = garden_data, segment, %Plant{} = plant, %PlantContext{} = plant_ctx) do 
         plant_data = %PlantData{
-            segment: plant.segment
+            segment: plant.segment,
+            plant_id: plant.id
         }
 
         # Note: we expect here that 0,0 won't be a stone, ofcourse ...

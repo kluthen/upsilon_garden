@@ -4,7 +4,7 @@
 
     <div class="garden">
       <%= for segment <- @garden.segments do %>
-        <%= render "segment.html", segment: segment%>
+        <%= render "segment.html", segment: segment, plants: @plants%>
       <% end %>
     </div>
   </div>

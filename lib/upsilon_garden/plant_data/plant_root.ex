@@ -3,7 +3,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     import Ecto.Changeset
     alias UpsilonGarden.{PlantData, GardenData}
     alias UpsilonGarden.PlantData.{PlantRoot,PlantRootContext}
-    alias UpsilonGarden.GardenData.{Component,Bloc}
+    alias UpsilonGarden.GardenData.{Component,Bloc,Influence}
 
     def keep, do: 0
     def trunc_in, do: 1
@@ -46,6 +46,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
                 
                 current_in_range = bloc_is_in_range?(x,depth,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, plant_data.segment)
                 current_in_range = current_in_range and GardenData.get_bloc(garden_data, x,depth).type != Bloc.stone()
+                match = %Influence{type: Influence.plant(), plant_id: plant_data.plant_id}
+                current_in_range = current_in_range and length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) == 0
 
                 if current_in_range do 
                     {x, {true, [x|current_list], result}}

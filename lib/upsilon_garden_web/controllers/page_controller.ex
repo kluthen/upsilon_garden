@@ -8,10 +8,16 @@ defmodule UpsilonGardenWeb.PageController do
   def index(conn, _params) do
     garden = Garden
     |> first
+    |> preload(:plants)
     |> Repo.one
+
+    plant_by_segment = Enum.reduce(garden.plants, %{}, fn plant, acc ->
+      Map.put(acc, plant.segment, plant)
+    end) 
 
     conn
     |> assign(:garden, garden.data)
+    |> assign(:plants, plant_by_segment)
     |> render("index.html")
   end
 
