@@ -15,6 +15,7 @@ defmodule UpsilonGarden.GardenData.Influence do
         field :plant_id, :integer
         field :ratio, :float
         field :power, :integer
+        field :prime_root, :boolean, default: false
         embeds_many :components, UpsilonGarden.GardenData.Component
     end
 
@@ -37,7 +38,11 @@ defmodule UpsilonGarden.GardenData.Influence do
                 influence.type < 3 -> 
                     influence.source_id == reference.source_id
                 influence.type == 3 ->
-                    influence.plant_id == reference.plant_id
+                    if reference.prime_root do 
+                        influence.prime_root == reference.prime_root
+                    else
+                        influence.plant_id == reference.plant_id 
+                    end
                 influence.type == 4 ->
                     influence.event_id == reference.event_id
                 true ->

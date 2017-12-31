@@ -1,5 +1,6 @@
 defmodule UpsilonGarden.PlantData.PlantRoot do 
     use Ecto.Schema
+    require Logger
     import Ecto.Changeset
     alias UpsilonGarden.{PlantData, GardenData}
     alias UpsilonGarden.PlantData.{PlantRoot,PlantRootContext}
@@ -17,6 +18,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         field :rejection_rate, :float, default: 1.0 
         field :pos_x, :integer
         field :pos_y, :integer
+        field :prime_root, :boolean, default: false
     end
 
     @doc """
@@ -31,45 +33,71 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
             absorb_mode: root_ctx.root_mode,
             absorbtion_rate: root_ctx.absorption_rate,
             rejection_rate: root_ctx.rejection_rate,
+            prime_root: root_ctx.prime_root
         }
 
         # Seek out "valid" blocs beforehand.
 
-        
+        # valid_blocs is a depth to valid items list.
+        {valid_blocs, used} = seek_valid_blocs(garden_data, plant_data, root_ctx)
 
+        # Seek number of root to create 
+
+        # valid blocs doesn't count already root used stuff ;) so adding it to total space.
+        total_space = Enum.reduce( valid_blocs, used, fn d,acc -> length(d) + acc end)
+        # but remove them from those to be created. might round down to 0 ... :) or less.
+        expected_root_count = round(total_space * root_ctx.fill_rate) - used
+
+        # now fill 
+        fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
+    end
+
+    def seek_valid_blocs(garden_data, plant_data, root_ctx) do 
+        
         greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
         min_x = trunc(plant_data.segment - (greater_width - 1) / 2)
         max_x = round(plant_data.segment + (greater_width - 1) / 2)
 
-        valid_blocs = for depth <- 0..(root_ctx.depth - 1) do 
-            {_, {_,last,result}} = Enum.map_reduce(min_x..max_x, {false,[], []}, fn x, {in_range, current_list, result} = acc ->
+
+        Enum.reduce(0..(root_ctx.depth - 1), {[],0}, fn depth, {valid_blocs, current_used} ->
+            {_, {_,last,result, used}} = Enum.map_reduce(min_x..max_x, {false,[], [], 0}, fn x, {in_range, current_list, result, used} ->
                 
                 current_in_range = bloc_is_in_range?(x,depth,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, plant_data.segment)
                 current_in_range = current_in_range and GardenData.get_bloc(garden_data, x,depth).type != Bloc.stone()
+
                 match = %Influence{type: Influence.plant(), plant_id: plant_data.plant_id}
-                current_in_range = current_in_range and length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) == 0
+                already_used = length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) != 0
+
+                current_in_range = if not already_used do 
+                    # it's not already used by one of our root, but might be a prime root of another plant (we can't colonize other prime root.)
+                    match = %Influence{type: Influence.plant(), prime_root: true}
+                    prime_root_of_plant = length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) != 0
+
+                    # we absolutely can't work with prime root of other plants.
+                    current_in_range and not prime_root_of_plant
+                else
+                    current_in_range
+                end
+
+                used = if already_used do 
+                    used + 1
+                else
+                    used
+                end
 
                 if current_in_range do 
-                    {x, {true, [x|current_list], result}}
+                    {x, {true, [x|current_list], result, used}}
                 else
                     if in_range do 
-                        {x, {false, [], [current_list|result]}}
+                        {x, {false, [], [current_list|result], used}}
                     else 
-                        {x, acc}
+                        {x, {in_range, current_list, result, used}}
                     end
                 end
             end)
 
-            List.flatten [last|result]
-        end
-
-        # valid_blocs is a depth to valid items list.
-
-        # Seek number of root to create 
-        expected_root_count = round(Enum.reduce( valid_blocs, 0, fn d,acc -> length(d) + acc end) * root_ctx.fill_rate)
-        
-        # now fill 
-        fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
+            { valid_blocs ++ [List.flatten([last|result])] , used + current_used}
+        end)
     end
 
     defp bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do 
@@ -117,7 +145,9 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     end
 
     defp fill_roots(_garden_data, plant_data, [], _root_ctx, _valid_blocs, _root_count,_basic_root), do: {plant_data,[]}
-    defp fill_roots(_garden_data, plant_data, potential, _root_ctx, _valid_blocs, 0,_basic_root), do: {plant_data,potential}
+    defp fill_roots(_garden_data, plant_data, potential, _root_ctx, _valid_blocs, root_count,_basic_root) when root_count <= 0 do 
+        {plant_data,potential}
+    end
 
     #    Roll a potential, removes it from the stack.
     #    create a root at rolled spot, add to potential newly available and valid bloc with appropriate probability.

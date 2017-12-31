@@ -82,6 +82,14 @@
     opacity: 0.9;
 }
 
+.bloc_prime_root {
+    border: 2px solid rgb(8, 56, 8);
+}
+
+.bloc_root {
+    border: 2px solid rgb(26, 165, 26);
+}
+
 .bloc_influenced {
     opacity: 0.9;
     background-color: rgb(165, 77, 42);

@@ -94,6 +94,7 @@ defmodule UpsilonGarden.Garden do
     # update influence with appropriate informations ...
     ninfluence=influence
     |> Map.put(:components, root.rejecters)
+    |> Map.put(:prime_root, root.prime_root)
 
     GardenData.set_influence(garden_data, root.pos_x, root.pos_y, ninfluence)
     |> setup_plant(roots, influence)

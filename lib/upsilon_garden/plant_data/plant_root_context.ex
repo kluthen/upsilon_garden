@@ -53,6 +53,8 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         # selected components and their ratio (composition, quantity)
         field :rejection, {:array, :map}
         field :absorption, {:array, :map}
+
+        field :prime_root, :boolean, default: false
     end
 
     @doc """
@@ -72,8 +74,10 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             max_top_width_range: prepare_range([{1,1}]),
             max_bottom_width_range: prepare_range([{1,1}]),
             root_mode_range: prepare_range([{0,5},{1,3},{2,1}]),
+            prime_root: true
         }
     end
+    
     def default_secondary do 
         %PlantRootContext{
             absorption_range: prepare_range([{"AB",7},{"A",3}, {"BC",2}, {"C", 1}, {"B",1}]),
@@ -85,9 +89,10 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             orientation_range: prepare_range([{0.5,5},{0.3,1},{0.7,1}]),
             fill_rate_range: prepare_range([{0.5,5},{0.6,5},{0.4,5}]),
             depth_range: prepare_range([{3,5},{2,3}]),
-            max_top_width_range: prepare_range([{3,5},{2,3}]),
+            max_top_width_range: prepare_range([{3,5},{1,3}]),
             max_bottom_width_range: prepare_range([{1,1}]),
             root_mode_range: prepare_range([{0,5},{1,3},{2,1}]),
+            prime_root: false
         }
     end
 

@@ -24,7 +24,19 @@ defmodule UpsilonGardenWeb.PageView do
         res 
       end
 
-      res = ["bloc","bloc_active","bloc_type_#{bloc.type}" | res]
+      influence = for influence <- bloc.influences do 
+        if influence.type == 3 do
+          if influence.prime_root do 
+            "bloc_prime_root"
+          else
+            "bloc_root"
+          end
+        end
+      end
+      |> Enum.uniq
+      |> Enum.reject(fn i -> i == nil end)
+
+      res = ["bloc","bloc_active","bloc_type_#{bloc.type}" | res] ++ influence
 
       Enum.join(res, " ")
     else
