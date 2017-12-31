@@ -33,10 +33,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
 
         # Fixed values
 
-        # Orientation, -0.5 -> 0.5, abs(0.5) fully horizontal expansion
-        # 0 fully vertical expansion
-        # negative value: random will begin from  vertical axis
-        # positive value: random will begin from horizontal axis
+        # orientation: 0 -> 1; 0 fully vertical, 1 fully horizontal
         field :orientation, :float
         # max depth that a root can get to. min 1
         field :depth, :integer
@@ -69,7 +66,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             rejection_range: prepare_range([{"C",1}, {"B",1}, {"A",1}]),
             rejection_rate_range: prepare_range([{0.2,3},{0.4,5},{0.8,2}]),
             rejection_count_range: prepare_range([{1,3},{2,5},{3,2}]),
-            orientation_range: prepare_range([{0.25,5},{0.3,1},{0.2,1}]),
+            orientation_range: prepare_range([{0.5,2},{0.3,5},{0.7,1}]),
             fill_rate_range: prepare_range([{0.8,1}]),
             depth_range: prepare_range([{1,5},{2,3}]),
             max_top_width_range: prepare_range([{1,1}]),
@@ -85,7 +82,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             rejection_range: prepare_range([{"C",1}, {"B",1}, {"A",1}]),
             rejection_rate_range: prepare_range([{0.1,3},{0.2,5},{0.4,2}]),
             rejection_count_range: prepare_range([{1,3},{2,5},{3,2}]),
-            orientation_range: prepare_range([{0.25,5},{0.3,1},{0.2,1}]),
+            orientation_range: prepare_range([{0.5,5},{0.3,1},{0.7,1}]),
             fill_rate_range: prepare_range([{0.5,5},{0.6,5},{0.4,5}]),
             depth_range: prepare_range([{3,5},{2,3}]),
             max_top_width_range: prepare_range([{3,5}{2,3}]),
@@ -163,7 +160,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             :components_absorption_rate_range,
             :components_rejection_range,
             :components_rejection_rate_range   ])
-        |> validate_number(:orientation, greater_than_or_equal_to: -0.5, less_than_or_equal_to: 0.5)
+        |> validate_number(:orientation, greater_than_or_equal_to: 0, less_than_or_equal_to: 1)
         |> validate_number(:depth, greater_than_or_equal_to: 1)
         |> validate_number(:max_top_width, greater_than_or_equal_to: 1)
         |> validate_number(:max_bottom_width, greater_than_or_equal_to: 1)
