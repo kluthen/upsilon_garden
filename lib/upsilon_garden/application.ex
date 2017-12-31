@@ -28,4 +28,12 @@ defmodule UpsilonGarden.Application do
     UpsilonGardenWeb.Endpoint.config_change(changed, removed)
     :ok
   end
+
+  def test_init do 
+    alias UpsilonGarden.{Repo,Garden, User, GardenData, Plant, PlantContext, PlantData}
+    User.create "kluthen"
+    import Ecto.Query
+    garden = Garden |> first |> Repo.one
+    Garden.create_plant(garden, 4, PlantContext.default)
+  end
 end
