@@ -4,6 +4,7 @@ defmodule UpsilonGarden.PlantData do
     alias UpsilonGarden.{Plant,PlantData,PlantContext,GardenData}
     alias UpsilonGarden.GardenData.{Component}
     alias UpsilonGarden.PlantData.{PlantRoot}
+    require Logger
 
     embedded_schema do 
         embeds_many :roots, PlantRoot
@@ -19,7 +20,7 @@ defmodule UpsilonGarden.PlantData do
 
         returns updated plant data.
         """
-    def generate(%GardenData{} = garden_data, segment, %Plant{} = plant, %PlantContext{} = plant_ctx) do 
+    def generate(%GardenData{} = garden_data, %Plant{} = plant, %PlantContext{} = plant_ctx) do 
         plant_data = %PlantData{
             segment: plant.segment,
             plant_id: plant.id
@@ -27,8 +28,11 @@ defmodule UpsilonGarden.PlantData do
 
         # Note: we expect here that 0,0 won't be a stone, ofcourse ...
 
-        {plant_data, potential} = PlantRoot.generate_roots(garden_data, plant_data, [{segment,0}], plant_ctx.prime_root)
-        {plant_data, _} = PlantRoot.generate_roots(garden_data, plant_data, potential, plant_ctx.secondary_root)
+        plant_data = PlantRoot.generate_roots(garden_data, plant_data, plant_ctx.prime_root)
+        prime_root_count = length(plant_data.roots)
+        Logger.debug "Prime roots added: #{prime_root_count}"
+        plant_data = PlantRoot.generate_roots(garden_data, plant_data, plant_ctx.secondary_root)
+        Logger.debug "Secondary roots added: #{length(plant_data.roots) - prime_root_count}"
 
         # That's it for the moment. 
         plant_data
