@@ -17,8 +17,10 @@ defmodule UpsilonGardenWeb.Router do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
-    get "/:segment/", PageController, :get_segment
-    get "/:segment/bloc/:bloc/", PageController, :get_bloc
+    get "/info/plant/:plant", PageController, :get_plant
+    get "/info/projection/:plant", PageController, :get_projection
+    get "/info/segment/:segment/", PageController, :get_segment
+    get "/info/segment/:segment/bloc/:bloc/", PageController, :get_bloc
   end
 
   # Other scopes may use custom stacks.

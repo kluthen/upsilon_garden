@@ -14,21 +14,29 @@
       <div class="col-lg-12">
         <h4>Help</h4>
         <div id="show_segment"></div>
-        <div id="show_plant"></div>
         <div id="show_bloc"></div>
       </div>
     </div>
     <div class="row">
       <div class="col-lg-12">
         <h4>Locked</h4>
-        <div id="show_locked_plant"></div>
         <div id="show_locked_bloc"></div>
       </div>
     </div>
   </div>
   <div class="col-lg-2" style="background-color:green;" >
-  <h4>Plant</h4>
-  <div id="show_plant"></div>
+  <div class="row">
+      <div class="col-lg-12">
+        <h4>Plant</h4>
+        <div id="show_plant"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <h4>Projection</h4>
+        <div id="show_projection_plant"></div>
+      </div>
+    </div>
   </div>
 </div>
 

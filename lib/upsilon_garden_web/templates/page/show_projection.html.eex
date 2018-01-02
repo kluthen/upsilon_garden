@@ -1,0 +1,7 @@
+<h4>Projection: Global</h4>
+
+<%= for alt <- @projection.alterations do %>
+    Comp: <%= alt.component %><br/>
+    Current: <%= alt.current_value %> <br/>
+    Rate: <%= alt.rate %> <br/>
+<% end %>

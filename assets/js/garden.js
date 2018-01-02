@@ -3,14 +3,14 @@ var garden = {
     current_bloc: 0,
     setSegment: function(sid) {
         this.current_segment = sid;
-        $.get("/" + this.current_segment)
+        $.get("/info/segment/" + this.current_segment)
             .success(function(data) {
                 $("#show_segment").html(data);
             });
     },
     setBloc: function(bid) {
         this.current_bloc = bid;
-        $.get("/" + this.current_segment + "/bloc/" + this.current_bloc)
+        $.get("/info/segment/" + this.current_segment + "/bloc/" + this.current_bloc)
             .success(function(data) {
                 $("#show_bloc").html(data);
             });
@@ -24,12 +24,34 @@ var garden = {
 
         this.current_locked_segment = sid;
         this.current_locked_bloc = bid;
-        $.get("/" + this.current_locked_segment + "/bloc/" + this.current_locked_bloc)
+        $.get("/info/segment/" + this.current_locked_segment + "/bloc/" + this.current_locked_bloc)
             .success(function(data) {
                 $("#show_locked_bloc").html(data);
             });
         console.log('Locking ' + this.current_locked_segment + 'x' + this.current_locked_bloc);
         $(".bloc_active[data-segment='" + this.current_locked_segment + "'][data-bloc='" + this.current_locked_bloc + "']").toggleClass("bloc_locked");
+    },
+    current_plant_id: -1,
+    current_plant_projection_id: -1,
+    setPlant: function(plant_id) {
+        if (plant_id != this.current_plant_id) {
+            console.log("About to seek plant: " + plant_id);
+            this.current_plant_id = plant_id;
+            $.get("/info/plant/" + this.current_plant_id)
+                .success(function(data) {
+                    $("#show_plant").html(data);
+                });
+        }
+    },
+    setProjection: function(plant_id) {
+        if (plant_id != this.current_plant_id) {
+            console.log("About to seek plant projection: " + plant_id);
+            this.current_plant_projection_id = plant_id;
+            $.get("/info/projection/" + this.current_plant_projection_id)
+                .success(function(data) {
+                    $("#show_projection_plant").html(data);
+                });
+        }
     }
 }
 
@@ -52,3 +74,10 @@ $(".bloc_active").click(function() {
 
     garden.setLockedBloc(segment, bloc);
 });
+
+$(".segment_active[data-plant-id]").click(function() {
+    // on click on a segment with a plant. 
+    var plant_id = $(this).data("plant-id");
+    garden.setPlant(plant_id);
+    garden.setProjection(plant_id);
+})

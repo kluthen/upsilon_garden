@@ -1,5 +1,7 @@
 defmodule UpsilonGarden.GardenProjection.Alteration do 
     use Ecto.Schema
+    import Ecto.Changeset
+    alias UpsilonGarden.GardenProjection.Alteration
 
     embedded_schema do 
         field :component, :string 

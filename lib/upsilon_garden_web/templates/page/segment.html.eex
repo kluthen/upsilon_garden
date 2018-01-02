@@ -4,7 +4,12 @@
         else
             "inactive"
         end
-    %>">
+    %>" 
+    <%= 
+        if Map.has_key?(@plants, @segment.position) do  
+        "data-plant-id=#{@plants[@segment.position].id}"
+        end %>
+     >
     <!-- Display plant or whatever data we might have here ... -->
     <div class="above_ground above_ground_<%= 
         if @segment.active do 

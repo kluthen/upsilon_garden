@@ -9,6 +9,12 @@ defmodule UpsilonGarden.GardenProjection do
 
     end
 
+    def for_plant(%GardenProjection{} = projection,plant_id) do 
+        Enum.find(projection.plants,nil, fn proj -> 
+            proj.plant_id == plant_id 
+        end);
+    end
+
     def changeset(%GardenProjection{} = projection, attrs \\ %{}) do 
         projection
         |> cast(attrs, [:next_event])

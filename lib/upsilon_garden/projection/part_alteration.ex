@@ -1,6 +1,7 @@
-
 defmodule UpsilonGarden.GardenProjection.PartAlteration do 
     use Ecto.Schema 
+    import Ecto.Changeset
+    alias UpsilonGarden.GardenProjection.{PartAlteration,Alteration}
 
     embedded_schema do 
         field :part_id, :integer
