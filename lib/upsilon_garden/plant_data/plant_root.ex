@@ -6,15 +6,31 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     alias UpsilonGarden.PlantData.{PlantRoot,PlantRootContext}
     alias UpsilonGarden.GardenData.{Component,Bloc,Influence}
 
+    # Root mode
     def keep, do: 0
     def trunc_in, do: 1
     def trunc_out, do: 2
+
+    # Selection mode 
+    def random, do: 0
+    def weight, do: 1
+    def length, do: 2
+    def alpha , do: 3
+
+    # Matching mode
+    def left, do: 0
+    def right, do: 1
+    def both, do: 2
 
     embedded_schema do 
         embeds_many :absorbers, UpsilonGarden.GardenData.Component
         embeds_many :rejecters, UpsilonGarden.GardenData.Component
         field :absorb_mode, :integer, default: 0
-        field :absorbtion_rate, :float, default: 1.0 
+        field :selection_compo, :integer, default: 0
+        field :selection_target, :integer, default: 0
+        field :absorption_matching, :integer, default: 0
+        field :rejection_matching, :integer, default: 0
+        field :absorption_rate, :float, default: 1.0 
         field :rejection_rate, :float, default: 1.0 
         field :pos_x, :integer
         field :pos_y, :integer
@@ -31,11 +47,16 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
             absorbers: generate_components(root_ctx.absorption,[]),
             rejecters: generate_components(root_ctx.rejection,[]),
             absorb_mode: root_ctx.root_mode,
-            absorbtion_rate: root_ctx.absorption_rate,
+            absorption_rate: root_ctx.absorption_rate,
             rejection_rate: root_ctx.rejection_rate,
-            prime_root: root_ctx.prime_root
+            prime_root: root_ctx.prime_root,
+            selection_compo: root_ctx.selection_compo_to_absorb,
+            selection_target: root_ctx.selection_target_absorption,
+            absorption_matching: root_ctx.absorption_matching,
+            rejection_matching: root_ctx.rejection_matching,
         }
-
+        |> apply_selection_and_matching
+                
 
         # Seek out "valid" blocs beforehand.
 
@@ -62,6 +83,69 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
         # now fill 
         fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
+    end
+
+    
+    defp apply_selection_and_matching(basic_root) do 
+        # add/replace components to match absorption and rejection matching.
+        # if it's "both" that has been selected, then add mirror of the component
+        # if "right" replace each component by it's mirror.
+        abs = case basic_root.absorption_matching do 
+            0 -> # Left side first ... keep it as such.
+                basic_root.absorbers
+            1 -> # right side
+                Enum.map(basic_root.absorbers, fn compo ->
+                    Map.put(compo, :composition, String.reverse(compo.composition))
+                end)
+            2 -> # both sides
+                basic_root.absorbers ++ Enum.map(basic_root.absorbers, fn compo ->
+                    Map.put(compo, :composition, String.reverse(compo.composition))
+                end)
+            _ ->
+                basic_root.absorbers
+        end
+
+        # reorder absorbers and rejecters to match selection_compo
+        basic_root = Map.put(basic_root, :absorbers, sort_by_selection(abs, basic_root.selection_compo))
+        
+        rej = case basic_root.rejection_matching do 
+            0 -> # Left side first ... keep it as such.
+                basic_root.rejecters
+            1 -> # right side
+                Enum.map(basic_root.rejecters, fn compo ->
+                    Map.put(compo, :composition, String.reverse(compo.composition))
+                end)
+            2 -> # both side
+                basic_root.rejecters ++ Enum.map(basic_root.rejecters, fn compo ->
+                    Map.put(compo, :composition, String.reverse(compo.composition))
+                end)
+            _ ->
+                basic_root.rejecters
+        end
+
+        # reorder absorbers and rejecters to match selection_compo
+        Map.put(basic_root, :rejecters, sort_by_selection(rej, basic_root.selection_compo))
+    end
+
+    def sort_by_selection(components, selection) do 
+        case selection do 
+            0 -> # random
+                Enum.shuffle(components)
+            1 -> # weigth    
+                Enum.sort(components, fn lhs, rhs -> 
+                    Component.weight(lhs) < Component.weight(rhs)
+                end)    
+            2 -> # length
+                Enum.sort(components, fn lhs, rhs -> 
+                    Component.length(lhs) < Component.length(rhs)
+                end)  
+            3 -> # alpha
+                Enum.sort(components, fn lhs, rhs -> 
+                    lhs.composition < rhs.composition
+                end)  
+            _ -> # random
+                Enum.shuffle(components)
+        end
     end
 
     def seek_valid_blocs(garden_data, plant_data, root_ctx) do 
@@ -266,10 +350,31 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
     def changeset(%PlantRoot{} = root, attrs \\ %{}) do 
         root
-        |> cast(attrs, [:absorb_mode])
+        |> cast(attrs, [:absorb_mode, 
+                        :selection_compo, 
+                        :selection_target,
+                        :absorption_matching,
+                        :rejection_matching,
+                        :absorption_rate,
+                        :rejection_rate,
+                        :pos_x,
+                        :pos_y,
+                        :prime_root])
         |> cast_embed(:absorbers)
         |> cast_embed(:rejecters)
         |> cast_embed(:objectives)
-        |> validate_required([:absorb_mode, :objectives, :absorbers, :rejecters])
+        |> validate_required([  :absorb_mode, 
+                                :objectives, 
+                                :absorbers, 
+                                :rejecters, 
+                                :selection_compo, 
+                                :selection_target,
+                                :absorption_matching,
+                                :rejection_matching,
+                                :absorption_rate,
+                                :rejection_rate,
+                                :pos_x,
+                                :pos_y,
+                                :prime_root])
     end
 end

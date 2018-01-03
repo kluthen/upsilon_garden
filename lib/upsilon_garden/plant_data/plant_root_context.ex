@@ -31,6 +31,12 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         field :max_bottom_width_range, {:array, :integer}
         field :root_mode_range, {:array, :integer}
 
+        field :selection_compo_to_absorb_range, {:array,:integer}
+        field :selection_target_absorption_range, {:array,:integer}
+        field :absorption_matching_range, {:array,:integer}
+        field :rejection_matching_range, {:array,:integer}
+
+
         # Fixed values
 
         # orientation: 0 -> 1; 0 fully vertical, 1 fully horizontal
@@ -50,6 +56,16 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         # number of components to select
         field :absorption_count, :integer
         field :rejection_count, :integer
+
+        # Which component of the root we're going to absorb first
+        field :selection_compo_to_absorb, :integer
+        # Which component of the bloc we're going to absorb first
+        field :selection_target_absorption, :integer
+
+        # Matching 
+        field :absorption_matching, :integer
+        field :rejection_matching, :integer
+
         # selected components and their ratio (composition, quantity)
         field :rejection, {:array, :map}
         field :absorption, {:array, :map}
@@ -74,7 +90,11 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             max_top_width_range: prepare_range([{1,1}]),
             max_bottom_width_range: prepare_range([{1,1}]),
             root_mode_range: prepare_range([{0,5},{1,3},{2,1}]),
-            prime_root: true
+            prime_root: true,
+            selection_compo_to_absorb_range: prepare_range([{0,3},{1,5},{2,4},{3,2}]),
+            selection_target_absorption_range: prepare_range([{0,3},{1,5},{2,4},{3,2}]),
+            absorption_matching_range: prepare_range([{0,5},{1,3},{2,1}]),
+            rejection_matching_range: prepare_range([{0,5},{1,3},{2,1}])
         }
     end
 
@@ -92,7 +112,11 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
             max_top_width_range: prepare_range([{3,5}]),
             max_bottom_width_range: prepare_range([{3,1}]),
             root_mode_range: prepare_range([{0,5},{1,3},{2,1}]),
-            prime_root: false
+            prime_root: false,
+            selection_compo_to_absorb_range: prepare_range([{0,3},{1,5},{2,4},{3,2}]),
+            selection_target_absorption_range: prepare_range([{0,3},{1,5},{2,4},{3,2}]),
+            absorption_matching_range: prepare_range([{0,5},{1,3},{2,1}]),
+            rejection_matching_range: prepare_range([{0,5},{1,3},{2,1}])
         }
     end
 
@@ -107,7 +131,11 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         |> Map.put( :absorption_rate,   Enum.random(plant_root_ctx.absorption_rate_range))
         |> Map.put( :rejection_rate,    Enum.random(plant_root_ctx.rejection_rate_range))
         |> Map.put( :absorption_count,  Enum.random(plant_root_ctx.absorption_count_range))
-        |> Map.put( :rejection_count,  Enum.random(plant_root_ctx.rejection_count_range))
+        |> Map.put( :rejection_count,   Enum.random(plant_root_ctx.rejection_count_range))
+        |> Map.put( :selection_compo_to_absorb, Enum.random(plant_root_ctx.selection_compo_to_absorb_range))
+        |> Map.put( :selection_target_absorption, Enum.random(plant_root_ctx.selection_target_absorption_range))
+        |> Map.put( :absorption_matching, Enum.random(plant_root_ctx.absorption_matching_range))
+        |> Map.put( :rejection_matching, Enum.random(plant_root_ctx.rejection_matching_range))
         |> generate_absorption
         |> generate_rejection
     end

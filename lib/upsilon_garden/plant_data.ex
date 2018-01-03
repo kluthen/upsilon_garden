@@ -38,6 +38,12 @@ defmodule UpsilonGarden.PlantData do
         plant_data
     end
 
+    def get_root(%PlantData{} = plant_data, pos_x, pos_y) do
+        Enum.find(plant_data.roots, nil, fn root ->
+           root.pos_x == pos_x and root.pos_y == pos_y 
+        end)
+    end
+
 
     def changeset(%PlantData{} = data, _attrs \\ %{}) do 
         data
