@@ -7,6 +7,7 @@ defmodule UpsilonGarden.Plant do
   schema "plants" do
     field :name, :string
     field :segment, :integer
+    field :celerity, :integer
 
     embeds_one :content, PlantContent, on_replace: :delete
     embeds_one :context, PlantContext, on_replace: :delete
@@ -14,7 +15,7 @@ defmodule UpsilonGarden.Plant do
 
     belongs_to :garden, Garden
 
-    timestamps()
+    timestamps(type: :utc_datetime) # Generates :inserted_at, :updated_at
   end
   
 
