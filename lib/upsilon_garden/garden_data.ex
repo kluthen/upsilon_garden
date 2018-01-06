@@ -161,7 +161,7 @@ defmodule UpsilonGarden.GardenData do
         segments = for pos <- 0..(context.dimension - 1) do 
             segment = %UpsilonGarden.GardenData.Segment{position: pos, active: false}
             blocs = for depth <- 0..(context.depth - 1 ) do
-                bloc = %UpsilonGarden.GardenData.Bloc{position: depth, sources: []}
+                bloc = %UpsilonGarden.GardenData.Bloc{position: depth, segment: pos, sources: []}
                 cond do
                     depth == context.depth - 1 -> # ensure last bloc is always stone.
                         Map.put(bloc, :type, UpsilonGarden.GardenData.Bloc.stone())  

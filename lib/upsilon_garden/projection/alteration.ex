@@ -3,6 +3,13 @@ defmodule UpsilonGarden.GardenProjection.Alteration do
     import Ecto.Changeset
     alias UpsilonGarden.GardenProjection.Alteration
 
+    @doc """
+        event_type Rejecter: determine that a plant has been rejecting this. 
+        in this case, event_type_id become the plant_id
+    """
+    def rejection(), do: 0 
+    def absorption(), do: 1 
+
     embedded_schema do 
         field :component, :string 
         field :current_value, :float

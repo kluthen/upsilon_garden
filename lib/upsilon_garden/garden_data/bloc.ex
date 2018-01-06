@@ -7,6 +7,7 @@ defmodule UpsilonGarden.GardenData.Bloc do
 
     embedded_schema do 
         field :type, :integer 
+        field :segment, :integer
         field :position, :integer
         field :sources, {:array, :map}
         embeds_many :components, UpsilonGarden.GardenData.Component 

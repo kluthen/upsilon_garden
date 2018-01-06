@@ -16,6 +16,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     def weight, do: 1
     def length, do: 2
     def alpha , do: 3
+    def quantity , do: 4
 
     # Matching mode
     def left, do: 0
@@ -34,6 +35,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         field :rejection_rate, :float, default: 1.0 
         field :pos_x, :integer
         field :pos_y, :integer
+        field :plant_id, :integer
         field :prime_root, :boolean, default: false
     end
 
@@ -50,6 +52,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
             absorption_rate: root_ctx.absorption_rate,
             rejection_rate: root_ctx.rejection_rate,
             prime_root: root_ctx.prime_root,
+            plant_id: plant_data.plant_id,
             selection_compo: root_ctx.selection_compo_to_absorb,
             selection_target: root_ctx.selection_target_absorption,
             absorption_matching: root_ctx.absorption_matching,
@@ -127,28 +130,44 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         Map.put(basic_root, :rejecters, sort_by_selection(rej, basic_root.selection_compo))
     end
 
+    @doc """
+        Sort array of %{:composition, :quantity} by selection type. 
+        return ordered components.
+    """
     def sort_by_selection(components, selection) do 
         case selection do 
             0 -> # random
                 Enum.shuffle(components)
             1 -> # weigth    
                 Enum.sort(components, fn lhs, rhs -> 
-                    Component.weight(lhs) < Component.weight(rhs)
+                    Component.weight(lhs.composition) < Component.weight(rhs.composition)
                 end)    
             2 -> # length
                 Enum.sort(components, fn lhs, rhs -> 
-                    Component.length(lhs) < Component.length(rhs)
+                    Component.length(lhs.composition) < Component.length(rhs.composition)
                 end)  
             3 -> # alpha
                 Enum.sort(components, fn lhs, rhs -> 
                     lhs.composition < rhs.composition
+                end)  
+            4 -> # quantity
+                Enum.sort(components, fn lhs, rhs -> 
+                    lhs.quantity < rhs.quantity
                 end)  
             _ -> # random
                 Enum.shuffle(components)
         end
     end
 
-    def seek_valid_blocs(garden_data, plant_data, root_ctx) do 
+    @doc """
+        Tell whether target matches reference 
+    """
+    def component_match?(reference, target) do 
+        String.starts_with?(target,reference)
+    end
+
+    # Seek blocs that allow new roots within range of the context.
+    defp seek_valid_blocs(garden_data, plant_data, root_ctx) do 
         
         greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
         min_x = trunc(plant_data.segment - (greater_width - 1) / 2)

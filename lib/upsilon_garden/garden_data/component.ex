@@ -11,7 +11,7 @@ defmodule UpsilonGarden.GardenData.Component do
     @doc """
         Weight of a composition is the sum of all letters, where A is weigthed as 1 and Z 26 
     """
-    def weight(%Component{composition: comp}) do 
+    def weight(comp) do 
         compute_weight(to_charlist(comp), 0)
     end
 
@@ -23,7 +23,7 @@ defmodule UpsilonGarden.GardenData.Component do
     @doc """
         Length of a composition is the length of it's string.
     """
-    def length(%Component{composition: comp}) do 
+    def length(comp) do 
         String.length(comp)
     end
 
