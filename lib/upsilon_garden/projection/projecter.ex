@@ -1,10 +1,7 @@
 defmodule UpsilonGarden.GardenProjection.Projecter do 
-
-    alias UpsilonGarden.Plant
-    alias UpsilonGarden.GardenProjection
     alias UpsilonGarden.GardenProjection.{PartAlteration,Alteration}
     alias UpsilonGarden.PlantData.PlantRoot
-    alias UpsilonGarden.GardenData.{Bloc,Component}
+    alias UpsilonGarden.GardenData.{Component}
 
     @doc """
         Generate a projection for a given bloc. 

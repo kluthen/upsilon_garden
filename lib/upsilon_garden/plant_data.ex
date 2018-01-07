@@ -2,7 +2,6 @@ defmodule UpsilonGarden.PlantData do
     use Ecto.Schema
     import Ecto.Changeset
     alias UpsilonGarden.{Plant,PlantData,PlantContext,GardenData}
-    alias UpsilonGarden.GardenData.{Component}
     alias UpsilonGarden.PlantData.{PlantRoot}
     require Logger
 
@@ -12,11 +11,9 @@ defmodule UpsilonGarden.PlantData do
         field :plant_id, :integer
     end
 
-
     @doc """
         Based on PlantContext, generate a build structural plant.
         ATM, it will mostly generate roots, seek how to position them. 
-
 
         returns updated plant data.
         """
@@ -43,7 +40,6 @@ defmodule UpsilonGarden.PlantData do
            root.pos_x == pos_x and root.pos_y == pos_y 
         end)
     end
-
 
     def changeset(%PlantData{} = data, _attrs \\ %{}) do 
         data

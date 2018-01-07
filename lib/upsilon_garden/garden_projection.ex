@@ -3,7 +3,7 @@ defmodule UpsilonGarden.GardenProjection do
     import Ecto.Query
     import Ecto.Changeset
     alias UpsilonGarden.{Garden,GardenProjection,Repo}
-    alias UpsilonGarden.GardenProjection.{Plant, PartAlteration}
+    alias UpsilonGarden.GardenProjection.{Plant}
 
     embedded_schema do 
         field :next_event, :utc_datetime
