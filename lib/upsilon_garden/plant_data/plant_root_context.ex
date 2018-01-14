@@ -2,6 +2,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     use Ecto.Schema
     import Ecto.Changeset
     alias UpsilonGarden.PlantData.PlantRootContext
+    import UpsilonGarden.Tools
 
     embedded_schema do 
 
@@ -172,15 +173,6 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         Map.put(plant_root_ctx,:rejection,components)
     end
     
-    def prepare_range(list) do 
-        for {element, count} <- list do 
-            for _ <- 0..(count - 1) do 
-                element
-            end
-        end
-        |> List.flatten
-    end
-
     def changeset(%PlantRootContext{} = ctx, attrs \\ %{}) do 
         ctx
         |> cast(attrs, [

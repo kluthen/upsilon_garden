@@ -16,7 +16,7 @@ defmodule UpsilonGarden.PlantContext do
     def default do 
         %PlantContext{
             prime_root: PlantRootContext.default_prime,
-            secondary_root: PlantRootContext.default_secondary
+            secondary_root: PlantRootContext.default_secondary,
         }
     end
     

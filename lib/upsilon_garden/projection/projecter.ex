@@ -7,59 +7,19 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         Generate a projection for a given bloc. 
         returns updated projection.
     """
-    def build_projection(bloc, plants, projection) do 
-        # for each plant, seek appropriate root. Note: Their may be no root for this bloc !
-        roots = Enum.reduce(plants, [], fn plant, acc -> 
-            res = Enum.find(plant.data.roots, nil, fn root ->
-                root.pos_x == bloc.segment and root.pos_y == bloc.position
-            end)
-            case res do 
-                nil -> 
-                    acc
-                root ->
-                    [root|acc]
-            end
-        end)
-
-        components_availability = bloc.components
-
-        # for each root, seek if there are rejection based on stock only; these should be made available asap. (update projection accordingly)
-        # {projection,components_availability} = Enum.reduce(plants, {projection,components_availability}, fn plant, {projection,components_availability} ->
-        #     Enum.reduce(plant.data.roots, {projection,components_availability}, fn root, {projection,components_availability} ->
-        #         Enum.reduce(root.rejecters, {projection,components_availability}, fn rejecter, {projection,components_availability} -> 
-        #             res = Enum.find(plant.content.components, nil, fn compo ->
-        #                 rejecter.composition == compo.composition
-        #             end) 
-        #             case res do 
-        #                 nil -> 
-        #                     {projection,components_availability}
-        #                 compo -> 
-        #                     projection = add_part_to_plant(projection, plant.id, %PartAlteration{
-        #                         root_pos_x: bloc.pos_x,
-        #                         root_pos_y: bloc.pos_y,
-        #                         alterations: [%Alteration{
-        #                             component: rejecter.composition, 
-        #                             rate: 0 # this is a goddamn problem... 
-        #                             event_type: Alteration.rejection(),
-        #                             event_type_id: plant.id,
-        #                             # Generate next event date ... might be good to do this later on. as multiple
-        #                         }]
-        #                     })
-        #                     {projection,Map.update(components_availability, rejecter.composition, rejecter.quantity, &(&1 + rejecter.quantity))}
-        #             end
-        #         end)
-        #     end)
-        # end)
+    def build_projection(bloc, roots, components_availability, projection) do 
 
         # for each root (they're pre sorted by celerity, inherited by plant order)  take the first item to absorb, solong there are items to absorb.
-        feed(projection, bloc, components_availability, roots)
-        # seek appropriate element to absorb for this bloc.
+        projection = feeds(projection, bloc, components_availability, roots) 
+        # Now that absorptions have taken place, ensure that some rejection are correctly handled (means, some rejection may not need to be as complete as what they seem.)
+        update_store_rejects(projection)
     end
 
     @doc """
         Fill Projection with data from roots. 
+        returns projection
     """
-    def feed(projection, bloc, components_availability, roots) do 
+    def feeds(projection, bloc, components_availability, roots) do 
         {roots, {projection, components_availability, should_recycle} } = Enum.map_reduce(roots,{projection, components_availability, false}, fn root, {projection, components_availability, should_recycle} ->
             case root.absorbers do 
                 [absorber|rest] -> 
@@ -104,7 +64,7 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         end)
 
         if should_recycle do 
-            feed(projection, bloc, components_availability, roots)
+            feeds(projection, bloc, components_availability, roots)
         else
             projection
         end
@@ -243,8 +203,10 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         end
     end
 
-    # Returns a projection with new part added to provided plant.
-    defp add_part_to_plant(projection, plant_id, %PartAlteration{} = pa) do
+    @doc """ 
+        Returns a projection with new part added to provided plant.
+    """
+    def add_part_to_plant(projection, plant_id, %PartAlteration{} = pa) do
         Map.update(projection, :plants, [], fn plants ->
             found = Enum.find_index(plants, fn %UpsilonGarden.GardenProjection.Plant{plant_id: ^plant_id}  ->
                     true
@@ -264,4 +226,6 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
             end
         end)
     end
+
+
 end

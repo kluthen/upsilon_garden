@@ -28,6 +28,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         embeds_many :rejecters, UpsilonGarden.GardenData.Component
         field :absorb_mode, :integer, default: 0
         field :selection_compo, :integer, default: 0
+        field :selection_reject, :integer, default: 0
         field :selection_target, :integer, default: 0
         field :absorption_matching, :integer, default: 0
         field :rejection_matching, :integer, default: 0
@@ -54,6 +55,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
             prime_root: root_ctx.prime_root,
             plant_id: plant_data.plant_id,
             selection_compo: root_ctx.selection_compo_to_absorb,
+            selection_reject: root_ctx.selection_compo_to_reject,
             selection_target: root_ctx.selection_target_absorption,
             absorption_matching: root_ctx.absorption_matching,
             rejection_matching: root_ctx.rejection_matching,

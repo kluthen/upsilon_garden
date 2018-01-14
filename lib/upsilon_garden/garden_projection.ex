@@ -3,7 +3,7 @@ defmodule UpsilonGarden.GardenProjection do
     import Ecto.Query
     import Ecto.Changeset
     alias UpsilonGarden.{Garden,GardenProjection,Repo}
-    alias UpsilonGarden.GardenProjection.{Plant}
+    alias UpsilonGarden.GardenProjection.{Plant,Projecter}
 
     embedded_schema do 
         field :next_event, :utc_datetime
@@ -39,7 +39,21 @@ defmodule UpsilonGarden.GardenProjection do
             # iterate on each blocs, make up a budget for each plant on each bloc. add them to projection.
             Enum.reduce(garden.segments, projection, fn segment, projection ->
                 Enum.reduce(segment.blocs, projection, fn bloc, projection ->
-                    UpsilonGarden.GardenProjection.Projecter.build_projection(bloc, plants, projection)
+                    roots = Enum.reduce(plants, [], fn plant, acc -> 
+                        res = Enum.find(plant.data.roots, nil, fn root ->
+                            root.pos_x == bloc.segment and root.pos_y == bloc.position
+                        end)
+                        case res do 
+                            nil -> 
+                                acc
+                            root ->
+                                [root|acc]
+                        end
+                    end)
+
+                    components_availability = bloc.components
+                    
+                    Projecter.build_projection(bloc, roots, components_availability , projection)
                 end)
             end)
             |> compute_plants
@@ -82,6 +96,7 @@ defmodule UpsilonGarden.GardenProjection do
             proj.plant_id == plant_id 
         end);
     end
+
 
     def changeset(%GardenProjection{} = projection, attrs \\ %{}) do 
         projection
