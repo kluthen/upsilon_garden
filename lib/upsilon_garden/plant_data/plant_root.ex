@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.PlantData.PlantRoot do 
+defmodule UpsilonGarden.PlantData.PlantRoot do
     use Ecto.Schema
     require Logger
     import Ecto.Changeset
@@ -11,7 +11,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     def trunc_in, do: 1
     def trunc_out, do: 2
 
-    # Selection mode 
+    # Selection mode
     def random, do: 0
     def weight, do: 1
     def length, do: 2
@@ -23,7 +23,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     def right, do: 1
     def both, do: 2
 
-    embedded_schema do 
+    embedded_schema do
         embeds_many :absorbers, UpsilonGarden.GardenData.Component
         embeds_many :rejecters, UpsilonGarden.GardenData.Component
         field :absorb_mode, :integer, default: 0
@@ -32,8 +32,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         field :selection_target, :integer, default: 0
         field :absorption_matching, :integer, default: 0
         field :rejection_matching, :integer, default: 0
-        field :absorption_rate, :float, default: 1.0 
-        field :rejection_rate, :float, default: 1.0 
+        field :absorption_rate, :float, default: 1.0
+        field :rejection_rate, :float, default: 1.0
         field :pos_x, :integer
         field :pos_y, :integer
         field :plant_id, :integer
@@ -44,7 +44,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         Generate roots, stores them in plant data
         returns {plant_data, new_potentials}
     """
-    def generate_roots(%GardenData{} = garden_data, %PlantData{} = plant_data, %PlantRootContext{} = root_ctx) do 
+    def generate_roots(%GardenData{} = garden_data, %PlantData{} = plant_data, %PlantRootContext{} = root_ctx) do
         # basic root without position ...
         basic_root = %PlantRoot{
             absorbers: generate_components(root_ctx.absorption,[]),
@@ -55,13 +55,12 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
             prime_root: root_ctx.prime_root,
             plant_id: plant_data.plant_id,
             selection_compo: root_ctx.selection_compo_to_absorb,
-            selection_reject: root_ctx.selection_compo_to_reject,
             selection_target: root_ctx.selection_target_absorption,
             absorption_matching: root_ctx.absorption_matching,
             rejection_matching: root_ctx.rejection_matching,
         }
         |> apply_selection_and_matching
-                
+
 
         # Seek out "valid" blocs beforehand.
 
@@ -69,7 +68,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         {valid_blocs, used} = seek_valid_blocs(garden_data, plant_data, root_ctx)
 
         # seek out potentials targets.
-        potential = if root_ctx.prime_root do 
+        potential = if root_ctx.prime_root do
             # first prime root is directly on the plant segment topmost bloc.
             [{plant_data.segment, 0}]
         else
@@ -79,23 +78,23 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
             end)
         end
 
-        # Seek number of root to create 
+        # Seek number of root to create
 
         # valid blocs doesn't count already root used stuff ;) so adding it to total space.
         total_space = Enum.reduce( valid_blocs, used, fn d,acc -> length(d) + acc end)
         # but remove them from those to be created. might round down to 0 ... :) or less.
         expected_root_count = round(total_space * root_ctx.fill_rate) - used
 
-        # now fill 
+        # now fill
         fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
     end
 
-    
-    defp apply_selection_and_matching(basic_root) do 
+
+    defp apply_selection_and_matching(basic_root) do
         # add/replace components to match absorption and rejection matching.
         # if it's "both" that has been selected, then add mirror of the component
         # if "right" replace each component by it's mirror.
-        abs = case basic_root.absorption_matching do 
+        abs = case basic_root.absorption_matching do
             0 -> # Left side first ... keep it as such.
                 basic_root.absorbers
             1 -> # right side
@@ -112,8 +111,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
         # reorder absorbers and rejecters to match selection_compo
         basic_root = Map.put(basic_root, :absorbers, sort_by_selection(abs, basic_root.selection_compo))
-        
-        rej = case basic_root.rejection_matching do 
+
+        rej = case basic_root.rejection_matching do
             0 -> # Left side first ... keep it as such.
                 basic_root.rejecters
             1 -> # right side
@@ -133,44 +132,44 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
     end
 
     @doc """
-        Sort array of %{:composition, :quantity} by selection type. 
+        Sort array of %{:composition, :quantity} by selection type.
         return ordered components.
     """
-    def sort_by_selection(components, selection) do 
-        case selection do 
+    def sort_by_selection(components, selection) do
+        case selection do
             0 -> # random
                 Enum.shuffle(components)
-            1 -> # weigth    
-                Enum.sort(components, fn lhs, rhs -> 
+            1 -> # weigth
+                Enum.sort(components, fn lhs, rhs ->
                     Component.weight(lhs.composition) < Component.weight(rhs.composition)
-                end)    
+                end)
             2 -> # length
-                Enum.sort(components, fn lhs, rhs -> 
+                Enum.sort(components, fn lhs, rhs ->
                     Component.length(lhs.composition) < Component.length(rhs.composition)
-                end)  
+                end)
             3 -> # alpha
-                Enum.sort(components, fn lhs, rhs -> 
+                Enum.sort(components, fn lhs, rhs ->
                     lhs.composition < rhs.composition
-                end)  
+                end)
             4 -> # quantity
-                Enum.sort(components, fn lhs, rhs -> 
+                Enum.sort(components, fn lhs, rhs ->
                     lhs.quantity < rhs.quantity
-                end)  
+                end)
             _ -> # random
                 Enum.shuffle(components)
         end
     end
 
     @doc """
-        Tell whether target matches reference 
+        Tell whether target matches reference
     """
-    def component_match?(reference, target) do 
+    def component_match?(reference, target) do
         String.starts_with?(target,reference)
     end
 
     # Seek blocs that allow new roots within range of the context.
-    defp seek_valid_blocs(garden_data, plant_data, root_ctx) do 
-        
+    defp seek_valid_blocs(garden_data, plant_data, root_ctx) do
+
         greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
         min_x = trunc(plant_data.segment - (greater_width - 1) / 2)
         max_x = round(plant_data.segment + (greater_width - 1) / 2)
@@ -181,14 +180,14 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
         Enum.reduce(0..(root_ctx.depth - 1), {[],0}, fn depth, {valid_blocs, current_used} ->
             {_, {_,last,result, used}} = Enum.map_reduce(min_x..max_x, {false,[], [], 0}, fn x, {in_range, current_list, result, used} ->
-                
+
                 current_in_range = bloc_is_in_range?(x,depth,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, plant_data.segment)
                 current_in_range = current_in_range and GardenData.get_bloc(garden_data, x,depth).type != Bloc.stone()
 
                 match = %Influence{type: Influence.plant(), plant_id: plant_data.plant_id}
                 already_used = length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) != 0
 
-                current_in_range = if not already_used do 
+                current_in_range = if not already_used do
                     # it's not already used by one of our root, but might be a prime root of another plant (we can't colonize other prime root.)
                     match = %Influence{type: Influence.plant(), prime_root: true}
                     prime_root_of_plant = length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) != 0
@@ -199,18 +198,18 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
                     current_in_range
                 end
 
-                used = if already_used do 
+                used = if already_used do
                     used + 1
                 else
                     used
                 end
 
-                if current_in_range do 
+                if current_in_range do
                     {x, {true, [x|current_list], result, used}}
                 else
-                    if in_range do 
+                    if in_range do
                         {x, {false, [], [current_list|result], used}}
-                    else 
+                    else
                         {x, {in_range, current_list, result, used}}
                     end
                 end
@@ -220,18 +219,18 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         end)
     end
 
-    defp bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do 
+    defp bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do
         false
     end
-    
-    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when (max_top_width - max_bottom_width) <= 2 and y <= max_depth do 
+
+    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when (max_top_width - max_bottom_width) <= 2 and y <= max_depth do
         greater_width = max(max_top_width, max_bottom_width)
         segment - (greater_width - 1) / 2 <= x and x <= segment + (greater_width - 1) / 2
     end
 
     #    Tell whether provided bloc is in range of the plant based on its properties
     #    returns true or false.
-    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when y <= max_depth do 
+    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when y <= max_depth do
         common_width = min(max_top_width, max_bottom_width) + 2
         max_width = max(max_top_width, max_bottom_width)
         cond do
@@ -241,39 +240,39 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
                 false
             true ->
                 # Find a better solution ;)
-                # # # if x < segment do 
+                # # # if x < segment do
                 # # #     # seeking left border equation
                 # # #     coef = max_depth / ((segment + (max_bottom_width - 1) / 2) -  (segment + (max_top_width - 1) / 2))
-                # # #     p = 0 - (coef * (segment + (max_top_width - 1) / 2)) 
-                # # #     # y = coef x + p 
+                # # #     p = 0 - (coef * (segment + (max_top_width - 1) / 2))
+                # # #     # y = coef x + p
                 # # #     # coef x - y + p = 0
-                # # #     if max_top_width > max_bottom_width do 
+                # # #     if max_top_width > max_bottom_width do
                 # # #     else
                 # # #     end
                 # # # else
-                # # #     if max_top_width > max_bottom_width do 
+                # # #     if max_top_width > max_bottom_width do
                 # # #     else
                 # # #     end
                 # # # end
                 :rand.uniform(2) == 2
         end
-    end 
-    
+    end
+
     # Couldn't validate any other solution, so it's false, no matter what.
-    defp bloc_is_in_range?(_x,_y, _max_top_width, _max_bottom_width, _max_depth, _segment) do 
+    defp bloc_is_in_range?(_x,_y, _max_top_width, _max_bottom_width, _max_depth, _segment) do
         false
     end
 
     defp fill_roots(_garden_data, plant_data, [], _root_ctx, _valid_blocs, _root_count,_basic_root), do: plant_data
-    defp fill_roots(_garden_data, plant_data, _potential, _root_ctx, _valid_blocs, root_count,_basic_root) when root_count <= 0 do 
+    defp fill_roots(_garden_data, plant_data, _potential, _root_ctx, _valid_blocs, root_count,_basic_root) when root_count <= 0 do
         plant_data
     end
 
     #    Roll a potential, removes it from the stack.
     #    create a root at rolled spot, add to potential newly available and valid bloc with appropriate probability.
-    #    continue up until expected root count has been reached. 
+    #    continue up until expected root count has been reached.
     #    returns {plant_data,new_potentials}
-    defp fill_roots(%GardenData{} = garden_data, %PlantData{} = plant_data, potential, %PlantRootContext{} = root_ctx, valid_blocs, root_count, %PlantRoot{} = basic_root) do 
+    defp fill_roots(%GardenData{} = garden_data, %PlantData{} = plant_data, potential, %PlantRootContext{} = root_ctx, valid_blocs, root_count, %PlantRoot{} = basic_root) do
         # Roll a new root position !
         {r_x,r_y} = Enum.random(potential)
 
@@ -291,17 +290,17 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         plant_data = plant_data
         |> Map.update(:roots, [new_root], &([new_root|&1]))
 
-        
+
         npots = add_neighbours_to_potentials(r_x,r_y, plant_data,garden_data,root_ctx,valid_blocs,potential )
 
         # next !
         fill_roots(garden_data,plant_data,npots,root_ctx, valid_blocs,root_count - 1, basic_root)
     end
 
-    defp add_neighbours_to_potentials(r_x,r_y, plant_data,garden_data, root_ctx,valid_blocs, potential ) do 
+    defp add_neighbours_to_potentials(r_x,r_y, plant_data,garden_data, root_ctx,valid_blocs, potential ) do
         neighbours = get_valid_neighbours(r_x,r_y,garden_data,valid_blocs,plant_data)
         Logger.debug "Get Valid neighbours: #{inspect neighbours} "
-        neighbours = Enum.filter(neighbours, fn {n_x,n_y} -> 
+        neighbours = Enum.filter(neighbours, fn {n_x,n_y} ->
             # check if not already in potential
             # if already there, just leave it out
 
@@ -317,13 +316,13 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         horizontal_ratio =  1 + trunc(root_ctx.orientation * 10)
         vertical_ratio = 1 + (10 - trunc(root_ctx.orientation * 10))
 
-        npots = for {_x,y} = pot <- neighbours do 
-            if y == r_y do 
-                for _ <- 0..horizontal_ratio do 
+        npots = for {_x,y} = pot <- neighbours do
+            if y == r_y do
+                for _ <- 0..horizontal_ratio do
                     pot
                 end
-            else 
-                for _ <- 0..vertical_ratio do 
+            else
+                for _ <- 0..vertical_ratio do
                     pot
                 end
             end
@@ -332,47 +331,47 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
         new_potentials = potential ++ npots
         Logger.debug "New potential count #{length(new_potentials)}"
-        new_potentials        
+        new_potentials
     end
 
-    defp get_valid_neighbours(r_x,r_y,garden_data,valid_blocs,plant_data) do 
+    defp get_valid_neighbours(r_x,r_y,garden_data,valid_blocs,plant_data) do
         # Seek its neighbour and check them for availability (not already added, not a stone )
         Enum.filter([{r_x-1,r_y},{r_x,r_y+1},{r_x+1,r_y}], fn {x,y} = target ->
             Logger.debug "Checking neighbourg #{inspect target}: "
             Logger.debug "is_valid?: #{is_valid?(target, valid_blocs)}"
             Logger.debug "is dirt #{GardenData.get_bloc(garden_data, x,y).type == Bloc.dirt()}: "
             Logger.debug "is free of own roots #{Enum.find(plant_data.roots, false, fn root -> root.pos_x == x and root.pos_y == y end) == false}: "
-            
+
             is_valid?(target, valid_blocs)
-                and GardenData.get_bloc(garden_data, x,y).type == Bloc.dirt() 
+                and GardenData.get_bloc(garden_data, x,y).type == Bloc.dirt()
                 and Enum.find(plant_data.roots, false, fn root -> root.pos_x == x and root.pos_y == y end) == false
         end)
     end
 
-    defp is_valid?(_, []), do: false 
+    defp is_valid?(_, []), do: false
 
-    defp is_valid?({x,y}, [_|valid_blocs]) when y != 0 do 
+    defp is_valid?({x,y}, [_|valid_blocs]) when y != 0 do
         is_valid?({x,y-1}, valid_blocs)
     end
-    
-    # Tell whether a targeted bloc is valid or not. 
-    # Valid blocs is a list of list of valid blocs. Each item of the englobing list represent a depth level. 
-    defp is_valid?({x,_y}, [valid_blocs|_]) do 
+
+    # Tell whether a targeted bloc is valid or not.
+    # Valid blocs is a list of list of valid blocs. Each item of the englobing list represent a depth level.
+    defp is_valid?({x,_y}, [valid_blocs|_]) do
         x in valid_blocs
     end
-    
-    defp is_valid?(_, _), do: false 
-    
-    
+
+    defp is_valid?(_, _), do: false
+
+
     defp generate_components([], acc), do: acc
-    defp generate_components([%{composition: x,quantity: y} |rest], acc) do 
+    defp generate_components([%{composition: x,quantity: y} |rest], acc) do
         generate_components(rest, [%Component{composition: x, quantity: y} | acc])
     end
 
-    def changeset(%PlantRoot{} = root, attrs \\ %{}) do 
+    def changeset(%PlantRoot{} = root, attrs \\ %{}) do
         root
-        |> cast(attrs, [:absorb_mode, 
-                        :selection_compo, 
+        |> cast(attrs, [:absorb_mode,
+                        :selection_compo,
                         :selection_target,
                         :absorption_matching,
                         :rejection_matching,
@@ -384,11 +383,11 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         |> cast_embed(:absorbers)
         |> cast_embed(:rejecters)
         |> cast_embed(:objectives)
-        |> validate_required([  :absorb_mode, 
-                                :objectives, 
-                                :absorbers, 
-                                :rejecters, 
-                                :selection_compo, 
+        |> validate_required([  :absorb_mode,
+                                :objectives,
+                                :absorbers,
+                                :rejecters,
+                                :selection_compo,
                                 :selection_target,
                                 :absorption_matching,
                                 :rejection_matching,

@@ -17,13 +17,13 @@ defmodule UpsilonGarden.Plant do
 
     timestamps(type: :utc_datetime) # Generates :inserted_at, :updated_at
   end
-  
+
 
   @doc """
     Assemble a PlantContext with provided informations and sets up the plant
     Store it in DB.
   """
-  def create(plant, garden_data, segment, plant_ctx) do 
+  def create(plant, garden_data, segment, plant_ctx) do
     content = %PlantContent{}
     plant_ctx = Map.merge(PlantContext.default, plant_ctx)
     |> PlantContext.roll_dices
@@ -38,7 +38,7 @@ defmodule UpsilonGarden.Plant do
     # Create also structure of the plant and most probably nexts stages of evolutions.
     plant_data = PlantData.generate(garden_data, plant, plant_ctx)
     |> Map.put(:id, nil)
-    
+
     plant
     |> change()
     |> put_embed(:data, plant_data)

@@ -14,7 +14,7 @@ defmodule UpsilonGarden.Garden do
     embeds_one :projection, GardenProjection, on_replace: :delete
 
     belongs_to :user, UpsilonGarden.User
-    has_many :events, UpsilonGarden.Event 
+    has_many :events, UpsilonGarden.Event
     has_many :plants, UpsilonGarden.Plant
     has_many :sources, UpsilonGarden.Source
 
@@ -27,7 +27,7 @@ defmodule UpsilonGarden.Garden do
     Ensure 3 segments are active for user.
     Rolls sources and update Garden for it.
   """
-  def create(garden, context \\ %{} ) do 
+  def create(garden, context \\ %{} ) do
     # Using Select values for provided context.
     context = Map.merge(GardenContext.default, context)
     |> GardenContext.roll_dices
@@ -38,7 +38,7 @@ defmodule UpsilonGarden.Garden do
       |> change(dimension: context.dimension)
       |> put_embed(:context, context)
       |> Repo.insert!(returning: true)
-      
+
       # Generate the garden according to provided context
       # Create sources. Activate 3 segments.
       data = GardenData.generate(garden,context)
@@ -58,15 +58,15 @@ defmodule UpsilonGarden.Garden do
     Insert it on provided Garden segment
     Sets up plant influence on GardenData
   """
-  def create_plant(garden, segment, plant_ctx) do 
+  def create_plant(garden, segment, plant_ctx) do
     Repo.transaction( fn ->
       # Build up a new plant associated to this garden.
       # Generate it based on seed context.
       plant = garden
       |> build_assoc(:plants)
       |> Plant.create(garden.data, segment, plant_ctx)
-      
-      # Integrate plant influence onto garden 
+
+      # Integrate plant influence onto garden
       # (What it rejects)
       influence = %GardenData.Influence{
         plant_id: plant.id,
@@ -90,7 +90,7 @@ defmodule UpsilonGarden.Garden do
     Seek blocs where influence of the plant should be added.
     Update GardenData and returns it.
   """
-  def setup_plant(garden_data, [root|roots], influence) do 
+  def setup_plant(garden_data, [root|roots], influence) do
     # update influence with appropriate informations ...
     ninfluence=influence
     |> Map.put(:components, root.rejecters)
@@ -101,14 +101,14 @@ defmodule UpsilonGarden.Garden do
   end
 
   @doc """
-    Remove a plant influence from garden. 
+    Remove a plant influence from garden.
   """
-  def tear_down_plant(garden, plant_id) do 
+  def tear_down_plant(garden, plant_id) do
     match = %UpsilonGarden.GardenData.Influence{
       type: UpsilonGarden.GardenData.Influence.plant(),
       plant_id: plant_id
     }
-    # drop all influences related to this plant. 
+    # drop all influences related to this plant.
     data = GardenData.drop_influence(garden.data, match)
     |> Map.put(:id, nil)
 
