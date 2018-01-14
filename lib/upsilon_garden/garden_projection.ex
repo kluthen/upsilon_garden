@@ -28,13 +28,7 @@ defmodule UpsilonGarden.GardenProjection do
             projection = %GardenProjection{}
 
             # Sort plants according to their celerity.
-            plants = Enum.sort(plants, fn lhs,rhs ->
-                if lhs.celerity == rhs.celerity do 
-                    DateTime.compare(lhs.inserted_at, rhs.inserted_at) == :lt
-                else
-                    lhs.celerity < rhs.celerity 
-                end
-            end)
+            plants = sort_plants_by_celerity(plants)
 
             # iterate on each blocs, make up a budget for each plant on each bloc. add them to projection.
             Enum.reduce(garden.segments, projection, fn segment, projection ->
@@ -85,6 +79,17 @@ defmodule UpsilonGarden.GardenProjection do
                 end)
                 |> Map.values
             end)
+        end)
+    end
+
+    # Sort plants by celerity, tie with age.
+    defp sort_plants_by_celerity(plants) do 
+        plants = Enum.sort(plants, fn lhs,rhs ->
+            if lhs.celerity == rhs.celerity do 
+                DateTime.compare(lhs.inserted_at, rhs.inserted_at) == :lt
+            else
+                lhs.celerity < rhs.celerity 
+            end
         end)
     end
 

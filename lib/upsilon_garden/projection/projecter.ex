@@ -10,9 +10,7 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
     def build_projection(bloc, roots, components_availability, projection) do 
 
         # for each root (they're pre sorted by celerity, inherited by plant order)  take the first item to absorb, solong there are items to absorb.
-        projection = feeds(projection, bloc, components_availability, roots) 
-        # Now that absorptions have taken place, ensure that some rejection are correctly handled (means, some rejection may not need to be as complete as what they seem.)
-        update_store_rejects(projection)
+        feeds(projection, bloc, components_availability, roots) 
     end
 
     @doc """
