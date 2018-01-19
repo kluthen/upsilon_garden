@@ -53,6 +53,19 @@ defmodule UpsilonGarden.GardenData do
             Map.put(data, :segments, List.replace_at(data.segments,x, segment))
         end
     end
+    
+    @doc """
+        Update a bloc located by x,y with provided function.
+        fn(bloc) -> updated_bloc
+    """
+    def force_update_bloc(data,x,y, update_function) do 
+        segment = Enum.at(data.segments, x) 
+        bloc = Enum.at(segment.blocs, y)
+    
+        bloc = update_function.(bloc)
+        segment = Map.put(segment, :blocs, List.replace_at(segment.blocs,y,bloc))
+        Map.put(data, :segments, List.replace_at(data.segments,x, segment))
+    end
 
     @doc """
         Seek influence on all bloc matching provided Influence.

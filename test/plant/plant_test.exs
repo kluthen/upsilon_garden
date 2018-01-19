@@ -25,6 +25,13 @@ defmodule UpsilonGarden.Plant.PlantTest do
       assert plant.garden_id == context.garden.id
     end
 
+    test "can't add a plant on a segment that has on line 0 a stone", context do 
+
+    end
+
+    test "can't add a plant on a segment that has on line 0 a prime root", context do 
+
+    end
 
 
 end

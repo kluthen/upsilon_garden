@@ -81,7 +81,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         # Seek number of root to create
 
         # valid blocs doesn't count already root used stuff ;) so adding it to total space.
-        total_space = Enum.reduce( valid_blocs, used, fn d,acc -> length(d) + acc end)
+        total_space = Enum.reduce( valid_blocs, used, fn {_,d},acc -> length(d) + acc end)
         # but remove them from those to be created. might round down to 0 ... :) or less.
         expected_root_count = round(total_space * root_ctx.fill_rate) - used
 
@@ -167,8 +167,12 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         String.starts_with?(target,reference)
     end
 
-    # Seek blocs that allow new roots within range of the context.
-    defp seek_valid_blocs(garden_data, plant_data, root_ctx) do
+    @doc """
+     Seek blocs that allow new roots within range of the context.
+     returns {valid_blocs, used} with used blocs already root of current plant.
+     with valid_blocs is map; for each line store a list of valid segments ( for each y store a list of x)
+    """
+    def seek_valid_blocs(garden_data, plant_data, root_ctx) do
 
         greater_width = max(root_ctx.max_top_width, root_ctx.max_bottom_width)
         min_x = trunc(plant_data.segment - (greater_width - 1) / 2)
@@ -178,7 +182,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         Logger.debug "Seeking Valid blocs: greater_width : #{max(root_ctx.max_top_width, root_ctx.max_bottom_width)}"
 
 
-        Enum.reduce(0..(root_ctx.depth - 1), {[],0}, fn depth, {valid_blocs, current_used} ->
+        Enum.reduce(0..(root_ctx.depth - 1), {%{},0}, fn depth, {valid_blocs, current_used} ->
             {_, {_,last,result, used}} = Enum.map_reduce(min_x..max_x, {false,[], [], 0}, fn x, {in_range, current_list, result, used} ->
 
                 current_in_range = bloc_is_in_range?(x,depth,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, plant_data.segment)
@@ -215,7 +219,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
                 end
             end)
 
-            { valid_blocs ++ [List.flatten([last|result])] , used + current_used}
+            { Map.put(valid_blocs, depth, List.flatten([last|result])) , used + current_used}
         end)
     end
 
@@ -348,20 +352,14 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         end)
     end
 
-    defp is_valid?(_, []), do: false
-
-    defp is_valid?({x,y}, [_|valid_blocs]) when y != 0 do
-        is_valid?({x,y-1}, valid_blocs)
-    end
-
     # Tell whether a targeted bloc is valid or not.
-    # Valid blocs is a list of list of valid blocs. Each item of the englobing list represent a depth level.
-    defp is_valid?({x,_y}, [valid_blocs|_]) do
-        x in valid_blocs
+    defp is_valid?({x,y}, valid_blocs)  do
+        if Map.has_key?(valid_blocs, y) do 
+            x in valid_blocs[y]
+        else
+            false
+        end
     end
-
-    defp is_valid?(_, _), do: false
-
 
     defp generate_components([], acc), do: acc
     defp generate_components([%{composition: x,quantity: y} |rest], acc) do
