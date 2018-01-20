@@ -184,24 +184,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
         Enum.reduce(0..(root_ctx.depth - 1), {%{},0}, fn depth, {valid_blocs, current_used} ->
             {_, {_,last,result, used}} = Enum.map_reduce(min_x..max_x, {false,[], [], 0}, fn x, {in_range, current_list, result, used} ->
-
-                current_in_range = bloc_is_in_range?(x,depth,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, plant_data.segment)
-                current_in_range = current_in_range and GardenData.get_bloc(garden_data, x,depth).type != Bloc.stone()
-
-                match = %Influence{type: Influence.plant(), plant_id: plant_data.plant_id}
-                already_used = length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) != 0
-
-                current_in_range = if not already_used do
-                    # it's not already used by one of our root, but might be a prime root of another plant (we can't colonize other prime root.)
-                    match = %Influence{type: Influence.plant(), prime_root: true}
-                    prime_root_of_plant = length(Enum.filter(GardenData.get_bloc(garden_data, x,depth).influences, &Influence.match?(&1, match))) != 0
-
-                    # we absolutely can't work with prime root of other plants.
-                    current_in_range and not prime_root_of_plant
-                else
-                    current_in_range
-                end
-
+                {current_in_range, already_used} = is_bloc_usable?(x,depth,plant_data.segment,root_ctx,garden_data,plant_data.plant_id)
+                
                 used = if already_used do
                     used + 1
                 else
@@ -221,6 +205,29 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
             { Map.put(valid_blocs, depth, List.flatten([last|result])) , used + current_used}
         end)
+    end
+
+
+    @doc """
+        Tell whether bloc is usable or not.
+        return {usable, already_used} both bools
+    """
+    def is_bloc_usable?(x,y,segment,root_ctx,garden_data,plant_id) do 
+        current_in_range = bloc_is_in_range?(x,y,root_ctx.max_top_width,root_ctx.max_bottom_width,root_ctx.depth, segment)
+        current_in_range = current_in_range and GardenData.get_bloc(garden_data, x,y).type != Bloc.stone()
+        # Check that there aren't any other prime root in store
+        match = %Influence{type: Influence.plant(), prime_root: true}
+        current_in_range = current_in_range and Enum.empty?(Enum.filter(GardenData.get_bloc(garden_data, x,y).influences, fn bloc_i ->
+            # it's a prime root                 but not our plants
+            Influence.match?(bloc_i, match) and bloc_i.plant_id != plant_id
+        end)) # Must not have any of these.
+
+        # Check if target bloc is already used by our plant
+        match = %Influence{type: Influence.plant(), plant_id: plant_id}
+        already_used = not Enum.empty?(Enum.filter(GardenData.get_bloc(garden_data, x,y).influences, &Influence.match?(&1, match))) 
+    
+        {current_in_range and not already_used , already_used}
+
     end
 
     defp bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do

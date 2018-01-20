@@ -1,5 +1,5 @@
 defmodule UpsilonGarden.Plant.PlantRootGenerationTest do 
-    use ExUnit.Case, async: true
+    use ExUnit.Case, async: false
     import Ecto.Query
     import Ecto.Changeset
     import Ecto
@@ -40,30 +40,10 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
       end)
       {:ok, garden: garden, user: user, plant: plant}
     end
+    
 
-    test "ensure that stone blocs aren't selected as candidates", context do
-        # As by default garden provides 3 lines clear of stones, need to add one.
-        # Plant is expected to grow on segment 4
-        # Can't have a stone bloc on segment 4 line 0 
-        # (that would be lame ... shouldn't be able to add such plants ...) 
-        
+    test "ensure that stone blocs aren't selectable", context do
         fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
-            %Bloc{bloc|
-                type: Bloc.stone(),
-                components: [],
-                influences: [],
-                sources: []
-            }
-        end)
-        fixed_garden_data = GardenData.force_update_bloc(fixed_garden_data, 3,1, fn bloc ->
-            %Bloc{bloc|
-                type: Bloc.stone(),
-                components: [],
-                influences: [],
-                sources: []
-            }
-        end)
-        fixed_garden_data = GardenData.force_update_bloc(fixed_garden_data, 5,1, fn bloc ->
             %Bloc{bloc|
                 type: Bloc.stone(),
                 components: [],
@@ -78,22 +58,17 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
         # Should only seek to go in depth, can't go sideway thus
 
-        {valid_blocs, used} = PlantRoot.seek_valid_blocs(fixed_garden_data, context.plant.data, fixed_root_ctx )
-        # valid blocs should only contains 4,0
+        {usable,used} = PlantRoot.is_bloc_usable?(4,1,4,fixed_root_ctx,fixed_garden_data,0)
 
-        assert Map.has_key?(valid_blocs, 0) == true
-        assert length(valid_blocs[0]) == 1
-        assert [4] = valid_blocs[0] 
-        assert used == 0
-        assert Map.has_key?(valid_blocs, 1) == false
+        assert false == usable
+        assert false == used
     end
 
-    test "ensure that blocs with prime roots of other plants aren't selected as candidates", context do
-        # Add a line of prime root of another plant on depth 1; plants may never have id of 0 but that should be enought
-
+    test "ensure that other prime roots blocs aren't selectable", context do        
         influence = %Influence{
             type: Influence.plant(),
-            plant_id: 0
+            plant_id: 0,
+            prime_root: true
         }
         
         fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
@@ -101,15 +76,77 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
                 influences: [influence]
             }
         end)
-        fixed_garden_data = GardenData.force_update_bloc(fixed_garden_data, 3,1, fn bloc ->
+        # Ensure root context seeks bloc in 4,1
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        # Should only seek to go in depth, can't go sideway thus
+        {usable,used} = PlantRoot.is_bloc_usable?(4,1,4,fixed_root_ctx,fixed_garden_data,context.plant.id)
+
+        assert false == usable
+        assert false == used
+    end
+
+    test "ensure that our roots blocs aren't selectable and marked as used", context do        
+        influence = %Influence{
+            type: Influence.plant(),
+            plant_id: context.plant.id
+        }
+        
+        fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
             %Bloc{bloc|
-            influences: [influence]
+                influences: [influence]
             }
         end)
-        fixed_garden_data = GardenData.force_update_bloc(fixed_garden_data, 5,1, fn bloc ->
+        # Ensure root context seeks bloc in 4,1
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        # Should only seek to go in depth, can't go sideway thus
+        {usable,used} = PlantRoot.is_bloc_usable?(4,1,4,fixed_root_ctx,fixed_garden_data,context.plant.id)
+
+        assert false == usable
+        assert true == used
+    end
+    
+    test "ensure that other roots blocs are selectable and not used", context do        
+        influence = %Influence{
+            type: Influence.plant(),
+            plant_id: 0,
+            prime_root: false
+        }
+        
+        fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
             %Bloc{bloc|
-            influences: [influence]
+                influences: [influence]
             }
+        end)
+        # Ensure root context seeks bloc in 4,1
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        # Should only seek to go in depth, can't go sideway thus
+        {usable,used} = PlantRoot.is_bloc_usable?(4,1,4,fixed_root_ctx,fixed_garden_data,context.plant.id)
+
+        assert true == usable
+        assert false == used
+    end
+
+    test "ensure that stone blocs aren't selected as candidates", context do
+        # As by default garden provides 3 lines clear of stones, need to add one.
+        # Plant is expected to grow on segment 4
+        # Can't have a stone bloc on segment 4 line 0 
+        # (that would be lame ... shouldn't be able to add such plants ...) 
+        
+        fixed_garden_data = Enum.reduce(3..5, context.garden.data, fn x, gd -> 
+            GardenData.force_update_bloc(gd, x,1, fn bloc ->
+                %Bloc{bloc|
+                type: Bloc.stone(),
+                components: [],
+                influences: [],
+                sources: []
+                }
+            end)
         end)
 
         # Ensure root context seeks bloc in 4,1
@@ -125,16 +162,90 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert length(valid_blocs[0]) == 1
         assert [4] = valid_blocs[0] 
         assert used == 0
-        assert Map.has_key?(valid_blocs, 1) == false
+        assert Map.has_key?(valid_blocs, 1) == true
+        assert length(valid_blocs[1]) == 0
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 1
     end
 
-    test "ensure that blocs with prime roots of this plants are selected as candidates but added as used", context do
+    test "ensure that blocs with prime roots of other plants aren't selected as candidates", context do
+        # Add a line of prime root of another plant on depth 1; plants may never have id of 0 but that should be enought
+
         influence = %Influence{
             type: Influence.plant(),
-            plant_id: context.plant.id
+            plant_id: 0,
+            prime_root: true
         }
         
-        fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,0, fn bloc ->
+        fixed_garden_data = Enum.reduce(3..5, context.garden.data, fn x, gd -> 
+            GardenData.force_update_bloc(gd, x,1, fn bloc ->
+                %Bloc{bloc|
+                    influences: [influence]
+                }
+            end)
+        end)
+        
+
+        # Ensure root context seeks bloc in 4,1
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        # Should only seek to go in depth, can't go sideway thus
+
+        {valid_blocs, used} = PlantRoot.seek_valid_blocs(fixed_garden_data, context.plant.data, fixed_root_ctx )
+        # valid blocs should only contains 4,0
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert length(valid_blocs[0]) == 1
+        assert [4] = valid_blocs[0] 
+        assert used == 0
+        assert Map.has_key?(valid_blocs, 1) == true
+        assert length(valid_blocs[1]) == 0
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 1
+    end
+
+    test "ensure that blocs with prime roots of this plants aren't selected as candidates but added as used", context do
+        influence = %Influence{
+            type: Influence.plant(),
+            plant_id: context.plant.id,
+            prime_root: true
+        }
+        
+        fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
+            %Bloc{bloc|
+                influences: [influence]
+            }
+        end)
+        
+        # Ensure root context seeks bloc in 4,1
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        # Should only seek to go in depth, can't go sideway thus
+
+        {valid_blocs, used} = PlantRoot.seek_valid_blocs(fixed_garden_data, context.plant.data, fixed_root_ctx )
+        # valid blocs should only contains 4,0  4,2
+        # used should be 1
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert length(valid_blocs[0]) == 1
+        assert [4] = valid_blocs[0] 
+        assert Map.has_key?(valid_blocs, 1) == true
+        assert length(valid_blocs[1]) == 0
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 1
+        assert [4] = valid_blocs[2] 
+        assert used == 1
+    end
+
+    test "ensure that blocs with roots of other plants are selected as candidates", context do
+        influence = %Influence{
+            type: Influence.plant(),
+            plant_id: 0
+        }
+        
+        fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
             %Bloc{bloc|
                 influences: [influence]
             }
@@ -148,7 +259,7 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
 
         {valid_blocs, used} = PlantRoot.seek_valid_blocs(fixed_garden_data, context.plant.data, fixed_root_ctx )
         # valid blocs should only contains 4,0 4,1 4,2
-        # used should be 1
+        # used should be 0
 
         assert Map.has_key?(valid_blocs, 0) == true
         assert length(valid_blocs[0]) == 1
@@ -159,15 +270,40 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert Map.has_key?(valid_blocs, 2) == true
         assert length(valid_blocs[2]) == 1
         assert [4] = valid_blocs[2] 
-        assert used == 1
-    end
-
-    test "ensure that blocs with roots of other plants are selected as candidates", context do
-        
+        assert used == 0
     end
 
     test "ensure that blocs with roots of this plants are selected as candidates and added as used", context do
+        influence = %Influence{
+            type: Influence.plant(),
+            plant_id: context.plant.id
+        }
         
+        fixed_garden_data = GardenData.force_update_bloc(context.garden.data, 4,1, fn bloc ->
+            %Bloc{bloc|
+                influences: [influence]
+            }
+        end)
+        
+        # Ensure root context seeks bloc in 4,1
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        # Should only seek to go in depth, can't go sideway thus
+
+        {valid_blocs, used} = PlantRoot.seek_valid_blocs(fixed_garden_data, context.plant.data, fixed_root_ctx )
+        # valid blocs should only contains 4,0  4,2
+        # used should be 1
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert length(valid_blocs[0]) == 1
+        assert [4] = valid_blocs[0] 
+        assert Map.has_key?(valid_blocs, 1) == true
+        assert length(valid_blocs[1]) == 0
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 1
+        assert [4] = valid_blocs[2] 
+        assert used == 1
     end
 
     test "ensure candidates are within context bounds" do 

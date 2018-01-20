@@ -7,6 +7,6 @@ config :upsilon_garden, UpsilonGardenWeb.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :debug
+config :logger, level: :info
 
 import_config "test.secret.exs"
