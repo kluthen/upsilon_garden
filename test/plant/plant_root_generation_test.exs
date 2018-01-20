@@ -306,8 +306,71 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert used == 1
     end
 
-    test "ensure candidates are within context bounds" do 
+    test "ensure candidates are within context bounds ( top < bottom )",context do 
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
 
+        {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert length(valid_blocs[0]) == 1
+        assert [4] = valid_blocs[0] 
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 3
+        assert [3,4,5] = Enum.sort(valid_blocs[2])
+    end
+
+    
+    test "ensure candidates are within context bounds  ( top > bottom )",context do 
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
+
+        {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert length(valid_blocs[0]) == 3
+        assert [3,4,5] = Enum.sort(valid_blocs[0])
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 1
+        assert [4] = valid_blocs[2] 
+    end
+
+
+    test "ensure candidates are within context bounds  ( top = bottom )",context do 
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
+
+        {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert length(valid_blocs[0]) == 3
+        assert [3,4,5] = Enum.sort(valid_blocs[0])
+        assert Map.has_key?(valid_blocs, 1) == true
+        assert length(valid_blocs[1]) == 3
+        assert [3,4,5] = Enum.sort(valid_blocs[1]) 
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert length(valid_blocs[2]) == 3
+        assert [3,4,5] = Enum.sort(valid_blocs[2])
+    end
+
+    test "ensure candidates are within context bounds; depth check ",context do 
+        fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
+        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
+
+        {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
+
+        assert Map.has_key?(valid_blocs, 0) == true
+        assert Map.has_key?(valid_blocs, 1) == true
+        assert Map.has_key?(valid_blocs, 2) == true
+        assert Map.has_key?(valid_blocs, 3) == false
     end
 
     test "ensure that adding a root updates appropriately next potential candidates appropriately" do
