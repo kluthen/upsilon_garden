@@ -230,7 +230,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
     end
 
-    def bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do
+    def bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y >= max_depth do
         false
     end
 
