@@ -83,7 +83,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         # valid blocs doesn't count already root used stuff ;) so adding it to total space.
         total_space = Enum.reduce( valid_blocs, used, fn {_,d},acc -> length(d) + acc end)
         # but remove them from those to be created. might round down to 0 ... :) or less.
-        expected_root_count = round(total_space * root_ctx.fill_rate) - used
+        expected_root_count = round((total_space+ used) * root_ctx.fill_rate) 
 
         # now fill
         {plant_data, _pots} = fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
