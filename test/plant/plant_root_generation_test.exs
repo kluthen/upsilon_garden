@@ -306,28 +306,67 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert used == 1
     end
 
-    test "ensure candidates are within context bounds ( top < bottom )",context do 
+    test "ensure candidates are within context bounds ( top < bottom )" do 
+        assert PlantRoot.bloc_is_in_range?(3,0,1,3,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(5,0,1,3,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(4,0,1,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,1,1,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,2,1,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(3,2,1,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(5,2,1,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(2,2,1,3,3,4) == false # too much on the left
+        assert PlantRoot.bloc_is_in_range?(6,2,1,3,3,4) == false # too much on the right
+    end
+
+    test "ensure candidates are within context bounds  ( top > bottom )" do 
+        assert PlantRoot.bloc_is_in_range?(2,0,3,1,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(6,0,3,1,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(3,0,3,1,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(5,0,3,1,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,0,3,1,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,1,3,1,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,2,3,1,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(3,2,3,1,3,4) == false # too much on the left
+        assert PlantRoot.bloc_is_in_range?(5,2,3,1,3,4) == false # too much on the right
+    end
+    
+    test "ensure candidates are within context bounds  ( top = bottom )" do 
+        assert PlantRoot.bloc_is_in_range?(2,0,3,3,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(2,1,3,3,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(2,2,3,3,3,4) == false # too much on the top left
+        assert PlantRoot.bloc_is_in_range?(6,0,3,3,3,4) == false # too much on the top right
+        assert PlantRoot.bloc_is_in_range?(6,1,3,3,3,4) == false # too much on the top right
+        assert PlantRoot.bloc_is_in_range?(6,2,3,3,3,4) == false # too much on the top right
+        assert PlantRoot.bloc_is_in_range?(4,2,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(3,2,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(5,2,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,1,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(3,1,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(5,1,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(4,0,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(3,0,3,3,3,4) == true # right on the spot
+        assert PlantRoot.bloc_is_in_range?(5,0,3,3,3,4) == true # right on the spot
+    end
+
+    test "ensure candidates are selected within context bounds  ( top < bottom )",context do 
         fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 1)
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 3)
-        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
 
         {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
 
         assert Map.has_key?(valid_blocs, 0) == true
         assert length(valid_blocs[0]) == 1
-        assert [4] = valid_blocs[0] 
+        assert [4] = valid_blocs[0]
         assert Map.has_key?(valid_blocs, 2) == true
         assert length(valid_blocs[2]) == 3
         assert [3,4,5] = Enum.sort(valid_blocs[2])
     end
-
     
-    test "ensure candidates are within context bounds  ( top > bottom )",context do 
+    test "ensure candidates are selected within context bounds  ( top > bottom )",context do 
         fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 3)
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 1)
-        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
 
         {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
 
@@ -340,11 +379,10 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
     end
 
 
-    test "ensure candidates are within context bounds  ( top = bottom )",context do 
+    test "ensure candidates are selected within context bounds  ( top = bottom )",context do 
         fixed_root_ctx = Map.put(context.plant.context.prime_root, :depth, 3)
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_top_width, 3)
         fixed_root_ctx = Map.put(fixed_root_ctx, :max_bottom_width, 3)
-        fixed_root_ctx = Map.put(fixed_root_ctx, :fill_rate, 1)
 
         {valid_blocs, _used} = PlantRoot.seek_valid_blocs(context.garden.data, context.plant.data, fixed_root_ctx )
 

@@ -230,47 +230,35 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
     end
 
-    defp bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do
+    def bloc_is_in_range?(x,y, _max_top_width, _max_bottom_width, max_depth, _segment) when x < 0 or y > max_depth do
         false
     end
 
-    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when (max_top_width - max_bottom_width) <= 2 and y <= max_depth do
-        greater_width = max(max_top_width, max_bottom_width)
-        segment - (greater_width - 1) / 2 <= x and x <= segment + (greater_width - 1) / 2
+
+    def bloc_is_in_range?(x,y, max_top_width, _max_bottom_width, _max_depth, segment) when y==0 do
+        x >= segment - max_top_width/2 and x <= segment + max_top_width/2
     end
 
-    #    Tell whether provided bloc is in range of the plant based on its properties
-    #    returns true or false.
-    defp bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when y <= max_depth do
-        common_width = min(max_top_width, max_bottom_width) + 2
-        max_width = max(max_top_width, max_bottom_width)
-        cond do
-            segment - (common_width - 1) / 2 <= x and x <= segment + (common_width - 1) / 2 ->
-                true
-            segment - (max_width - 1) / 2 > x and x > segment + (max_width - 1) / 2 ->
-                false
-            true ->
-                # Find a better solution ;)
-                # # # if x < segment do
-                # # #     # seeking left border equation
-                # # #     coef = max_depth / ((segment + (max_bottom_width - 1) / 2) -  (segment + (max_top_width - 1) / 2))
-                # # #     p = 0 - (coef * (segment + (max_top_width - 1) / 2))
-                # # #     # y = coef x + p
-                # # #     # coef x - y + p = 0
-                # # #     if max_top_width > max_bottom_width do
-                # # #     else
-                # # #     end
-                # # # else
-                # # #     if max_top_width > max_bottom_width do
-                # # #     else
-                # # #     end
-                # # # end
-                :rand.uniform(2) == 2
-        end
+    def bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when y == max_depth-1 or max_top_width == max_bottom_width do
+        x >= segment - max_bottom_width/2 and x <= segment + max_bottom_width/2
+    end
+
+    @doc """
+        Tell whether provided bloc is in range of the plant based on its properties
+        returns true or false.
+    """
+    def bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when max_top_width > max_bottom_width do
+        ratio = max_bottom_width-max_top_width / max_depth-2
+        x >= Float.round(segment - (max_top_width + ratio*y)/2) and x <= Float.round(segment + (max_top_width + ratio*y)/2)
+    end
+    
+    def bloc_is_in_range?(x,y, max_top_width, max_bottom_width, max_depth, segment) when max_top_width < max_bottom_width do
+        ratio = max_bottom_width-max_top_width / max_depth-2
+        x >= Float.floor(segment - (max_top_width + ratio*y)/2) and x <= Float.floor(segment + (max_top_width + ratio*y)/2)
     end
 
     # Couldn't validate any other solution, so it's false, no matter what.
-    defp bloc_is_in_range?(_x,_y, _max_top_width, _max_bottom_width, _max_depth, _segment) do
+    def bloc_is_in_range?(_x,_y, _max_top_width, _max_bottom_width, _max_depth, _segment) do
         false
     end
 
