@@ -273,7 +273,7 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert used == 0
     end
 
-    test "ensure that blocs with roots of this plants are selected as candidates and added as used", context do
+    test "ensure that blocs with roots of this plants are not selected as candidates and added as used", context do
         influence = %Influence{
             type: Influence.plant(),
             plant_id: context.plant.id
@@ -411,7 +411,35 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert Map.has_key?(valid_blocs, 3) == false
     end
 
+    test "ensure neighbours selection provide only results within validated blocs" do 
+        valid_blocs = %{
+            0 => [3],
+            1 => [4]
+        }
+        assert [{3,0},{4,1}] = PlantRoot.get_valid_neighbours(4,0,valid_blocs)
+
+        valid_blocs = %{
+        }
+        assert [] = PlantRoot.get_valid_neighbours(4,0,valid_blocs)
+    end
+
     test "ensure that adding a root updates appropriately next potential candidates appropriately" do
+        valid_blocs = %{
+            0 => [3,4],
+            1 => [3,4,5],
+            2 => [3,4,5],
+        }
+        potential = [{4,0}]
+
+        {nvalid_blocs, npotentials} = PlantRoot.add_neighbours_to_potentials(4,0, 0.5, valid_blocs, potential) 
+
+        assert Map.has_key?(nvalid_blocs, 0)
+        assert [3] = nvalid_blocs[0]
+        assert length(npotentials) == 12
+        assert {3,0} in npotentials
+        assert {4,1} in npotentials
+        assert Enum.count(npotentials, fn bloc -> bloc == {3,0} end)  == 6
+        assert Enum.count(npotentials, fn bloc -> bloc == {4,1} end)  == 6
 
     end
 

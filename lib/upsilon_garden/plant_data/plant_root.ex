@@ -68,13 +68,13 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         {valid_blocs, used} = seek_valid_blocs(garden_data, plant_data, root_ctx)
 
         # seek out potentials targets.
-        potential = if root_ctx.prime_root do
+        {valid_blocs, potential} = if root_ctx.prime_root do
             # first prime root is directly on the plant segment topmost bloc.
-            [{plant_data.segment, 0}]
+            {valid_blocs,[{plant_data.segment, 0}]}
         else
             # seek out all previously known roots (should be prime) and from there on add to potentials.
-            Enum.reduce(plant_data.roots, [], fn root, potential ->
-                add_neighbours_to_potentials(root.pos_x,root.pos_y, plant_data,garden_data,root_ctx,valid_blocs,potential)
+            Enum.reduce(plant_data.roots, {valid_blocs, []}, fn root, {valid_blocs,potential} ->
+                 add_neighbours_to_potentials(root.pos_x,root.pos_y, root_ctx.orientation,valid_blocs,potential)
             end)
         end
 
@@ -86,7 +86,8 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         expected_root_count = round(total_space * root_ctx.fill_rate) - used
 
         # now fill
-        fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
+        {plant_data, _pots} = fill_roots(garden_data,plant_data,potential,root_ctx,valid_blocs,expected_root_count,basic_root)
+        plant_data
     end
 
 
@@ -178,10 +179,6 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         min_x = trunc(plant_data.segment - (greater_width - 1) / 2)
         max_x = round(plant_data.segment + (greater_width - 1) / 2)
 
-        Logger.debug "Seeking Valid blocs: min_x #{min_x}, max_x: #{max_x}"
-        Logger.debug "Seeking Valid blocs: greater_width : #{max(root_ctx.max_top_width, root_ctx.max_bottom_width)}"
-
-
         Enum.reduce(0..(root_ctx.depth - 1), {%{},0}, fn depth, {valid_blocs, current_used} ->
             {_, {_,last,result, used}} = Enum.map_reduce(min_x..max_x, {false,[], [], 0}, fn x, {in_range, current_list, result, used} ->
                 {current_in_range, already_used} = is_bloc_usable?(x,depth,plant_data.segment,root_ctx,garden_data,plant_data.plant_id)
@@ -262,9 +259,9 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         false
     end
 
-    defp fill_roots(_garden_data, plant_data, [], _root_ctx, _valid_blocs, _root_count,_basic_root), do: plant_data
-    defp fill_roots(_garden_data, plant_data, _potential, _root_ctx, _valid_blocs, root_count,_basic_root) when root_count <= 0 do
-        plant_data
+    defp fill_roots(_garden_data, plant_data, [], _root_ctx, _valid_blocs, _root_count,_basic_root), do: {plant_data,[]}
+    defp fill_roots(_garden_data, plant_data, potential, _root_ctx, _valid_blocs, root_count,_basic_root) when root_count <= 0 do
+        {plant_data, potential}
     end
 
     #    Roll a potential, removes it from the stack.
@@ -290,15 +287,34 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         |> Map.update(:roots, [new_root], &([new_root|&1]))
 
 
-        npots = add_neighbours_to_potentials(r_x,r_y, plant_data,garden_data,root_ctx,valid_blocs,potential )
+        {valid_blocs, npots} = add_neighbours_to_potentials(r_x,r_y, root_ctx.orientation,valid_blocs,potential )
 
         # next !
         fill_roots(garden_data,plant_data,npots,root_ctx, valid_blocs,root_count - 1, basic_root)
     end
 
-    defp add_neighbours_to_potentials(r_x,r_y, plant_data,garden_data, root_ctx,valid_blocs, potential ) do
-        neighbours = get_valid_neighbours(r_x,r_y,garden_data,valid_blocs,plant_data)
-        Logger.debug "Get Valid neighbours: #{inspect neighbours} "
+    @doc """
+        removes target bloc (r_x,r_y) from valid blocs and from potentials
+        seek out new blocs to put in potentials
+        update potentials appropriately
+
+        returns {valid_blocs, potentials} both updated.
+    """
+    def add_neighbours_to_potentials(r_x,r_y, orientation,valid_blocs, potential ) do
+        valid_blocs = Enum.map(valid_blocs, fn {y, xs} ->
+            if y == r_y do 
+                {y, Enum.reject(xs, &(&1 == r_x))}
+            else
+                {y,xs}
+            end
+        end)
+        |> Map.new
+
+        potential = Enum.reject(potential, fn {x,y} ->
+            x == r_x and y == r_y
+        end)
+
+        neighbours = get_valid_neighbours(r_x,r_y,valid_blocs)
         neighbours = Enum.filter(neighbours, fn {n_x,n_y} ->
             # check if not already in potential
             # if already there, just leave it out
@@ -307,21 +323,19 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
                                             {_,_} -> false
             end) == nil
         end)
-        Logger.debug "Available neighbours: #{inspect neighbours} - potentials"
-
 
         # compute ratio of it's presence in potential and add to it.
 
-        horizontal_ratio =  1 + trunc(root_ctx.orientation * 10)
-        vertical_ratio = 1 + (10 - trunc(root_ctx.orientation * 10))
+        horizontal_ratio =  1 + trunc(orientation * 10)
+        vertical_ratio = 1 + (10 - trunc(orientation * 10))
 
         npots = for {_x,y} = pot <- neighbours do
             if y == r_y do
-                for _ <- 0..horizontal_ratio do
+                for _ <- 1..horizontal_ratio do
                     pot
                 end
             else
-                for _ <- 0..vertical_ratio do
+                for _ <- 1..vertical_ratio do
                     pot
                 end
             end
@@ -329,21 +343,17 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         |> List.flatten
 
         new_potentials = potential ++ npots
-        Logger.debug "New potential count #{length(new_potentials)}"
-        new_potentials
+        {valid_blocs, new_potentials}
     end
 
-    defp get_valid_neighbours(r_x,r_y,garden_data,valid_blocs,plant_data) do
+    @doc """
+        for a given bloc, seek out neighbours within valid_blocs
+        return true or false
+    """
+    def get_valid_neighbours(r_x,r_y,valid_blocs) do
         # Seek its neighbour and check them for availability (not already added, not a stone )
-        Enum.filter([{r_x-1,r_y},{r_x,r_y+1},{r_x+1,r_y}], fn {x,y} = target ->
-            Logger.debug "Checking neighbourg #{inspect target}: "
-            Logger.debug "is_valid?: #{is_valid?(target, valid_blocs)}"
-            Logger.debug "is dirt #{GardenData.get_bloc(garden_data, x,y).type == Bloc.dirt()}: "
-            Logger.debug "is free of own roots #{Enum.find(plant_data.roots, false, fn root -> root.pos_x == x and root.pos_y == y end) == false}: "
-
+        Enum.filter([{r_x-1,r_y},{r_x,r_y+1},{r_x+1,r_y}], fn target ->
             is_valid?(target, valid_blocs)
-                and GardenData.get_bloc(garden_data, x,y).type == Bloc.dirt()
-                and Enum.find(plant_data.roots, false, fn root -> root.pos_x == x and root.pos_y == y end) == false
         end)
     end
 
