@@ -5,8 +5,8 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
     import Ecto
     require Logger
     alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContext,PlantData,GardenData,PlantContent}
-    alias UpsilonGarden.GardenData.{Bloc,Influence}
-    alias UpsilonGarden.PlantData.{PlantRoot}
+    alias UpsilonGarden.GardenData.{Bloc,Influence,Component}
+    alias UpsilonGarden.PlantData.{PlantRoot,PlantRootContext}
 
     setup_all do
       # Allows Ecto to exists here:
@@ -38,6 +38,8 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
         User |> Repo.delete_all
       end)
+
+      # Sets context to have garden, user, plant.
       {:ok, garden: garden, user: user, plant: plant}
     end
     
@@ -443,29 +445,119 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
 
     end
 
-    test "ensure generated absorptions are duplicated(and reverted) in case of 'both' matching" do
+    test "ensure generated rejections and absorptions are duplicated(and reverted) in case of 'both' matching" do
+        root = %PlantRoot{
+            absorption_matching: PlantRoot.both(),
+            absorbers: [%Component{
+                composition: "ABC",
+                quantity: 2.0
+            }],
+            rejection_matching: PlantRoot.both(),
+            rejecters: [%Component{
+                composition: "ABC",
+                quantity: 2.0
+            }],
+            selection_compo: PlantRoot.alpha()
+        }
+
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 2
+        assert [%Component{composition: "ABC"}, %Component{composition: "CBA"}] = result.absorbers
+        assert length(result.rejecters) == 2
+        assert [%Component{composition: "ABC"}, %Component{composition: "CBA"}] = result.rejecters
     end
 
-    test "ensure generated absorptions are reverted in case of right matching" do 
+    test "ensure generated rejections and absorptions are reverted in case of right matching" do 
+        root = %PlantRoot{
+            absorption_matching: PlantRoot.right(),
+            absorbers: [%Component{
+                composition: "ABC",
+                quantity: 2.0
+            }],
+            rejection_matching: PlantRoot.right(),
+            rejecters: [%Component{
+                composition: "ABC",
+                quantity: 2.0
+            }],
+            selection_compo: PlantRoot.alpha()
+        }
 
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 1
+        assert [%Component{composition: "CBA"}] = result.absorbers
+        assert length(result.rejecters) == 1
+        assert [%Component{composition: "CBA"}] = result.rejecters
     end
 
-    test "ensure generated absorptions are sorted according to context" do 
+    test "ensure generated rejections and absorptions are sorted according to context" do 
+        root = %PlantRoot{
+            absorption_matching: PlantRoot.left(),
+            absorbers: [%Component{
+                composition: "ABC",
+                quantity: 2.0
+            },%Component{
+                composition: "A",
+                quantity: 4.0
+            },%Component{
+                composition: "YZ",
+                quantity: 1.0
+            }],
+            rejection_matching: PlantRoot.left(),
+            rejecters: [%Component{
+                composition: "ABC",
+                quantity: 2.0
+            },%Component{
+                composition: "A",
+                quantity: 4.0
+            },%Component{
+                composition: "YZ",
+                quantity: 1.0
+            }],
+            selection_compo: PlantRoot.weight()
+        }
 
-    end
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 3
+        assert [%Component{composition: "A"}, %Component{composition: "ABC"}, %Component{composition: "YZ"}] = result.absorbers
+        assert length(result.rejecters) == 3
+        assert [%Component{composition: "A"}, %Component{composition: "ABC"}, %Component{composition: "YZ"}] = result.rejecters
 
-    test "ensure generated rejections are duplicated(and reverted) in case of 'both' matching" do
-    end
+        root = Map.put(root, :selection_compo, PlantRoot.length())
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 3
+        assert [%Component{composition: "A"}, %Component{composition: "YZ"}, %Component{composition: "ABC"}] = result.absorbers
+        assert length(result.rejecters) == 3
+        assert [%Component{composition: "A"}, %Component{composition: "YZ"}, %Component{composition: "ABC"}] = result.rejecters
 
-    test "ensure generated rejections are reverted in case of right matching" do 
+        root = Map.put(root, :selection_compo, PlantRoot.quantity())
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 3
+        assert [%Component{composition: "YZ"}, %Component{composition: "ABC"}, %Component{composition: "A"}] = result.absorbers
+        assert length(result.rejecters) == 3
+        assert [%Component{composition: "YZ"}, %Component{composition: "ABC"}, %Component{composition: "A"}] = result.rejecters
+        
+        root = Map.put(root, :selection_compo, PlantRoot.alpha())
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 3
+        assert [%Component{composition: "A"}, %Component{composition: "ABC"}, %Component{composition: "YZ"}] = result.absorbers
+        assert length(result.rejecters) == 3
+        assert [%Component{composition: "A"}, %Component{composition: "ABC"}, %Component{composition: "YZ"}] = result.rejecters
 
-    end
-
-    test "ensure generated rejections are sorted according to context" do 
-
+        root = Map.put(root, :selection_compo, PlantRoot.random())
+        result = PlantRoot.apply_selection_and_matching(root)
+        assert length(result.absorbers) == 3
+        assert length(result.rejecters) == 3
     end
 
     test "ensure generated rejections and absorptions components are filled" do 
+        available_components = UpsilonGarden.Tools.prepare_range([{"AB",7}])
 
+        components = PlantRootContext.generate_components(available_components,3)
+        assert length(components) == 1
+        assert [%{composition: "AB", quantity: 3}] = components
+
+        result = PlantRoot.generate_components(components,[])
+        assert length(result) == 1
+        assert [%Component{composition: "AB", quantity: 3}] = result
     end
 end

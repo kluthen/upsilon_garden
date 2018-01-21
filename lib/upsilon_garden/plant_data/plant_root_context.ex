@@ -122,7 +122,7 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     end
 
     def roll_dices(%PlantRootContext{} = plant_root_ctx) do 
-        plant_root_ctx
+        plant_root_ctx = plant_root_ctx
         |> Map.put( :orientation,       Enum.random(plant_root_ctx.orientation_range))
         |> Map.put( :depth,             Enum.random(plant_root_ctx.depth_range))
         |> Map.put( :max_top_width,     Enum.random(plant_root_ctx.max_top_width_range))
@@ -137,40 +137,25 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
         |> Map.put( :selection_target_absorption, Enum.random(plant_root_ctx.selection_target_absorption_range))
         |> Map.put( :absorption_matching, Enum.random(plant_root_ctx.absorption_matching_range))
         |> Map.put( :rejection_matching, Enum.random(plant_root_ctx.rejection_matching_range))
-        |> generate_absorption
-        |> generate_rejection
+        
+        # Need previously randomed data to be used. 
+        plant_root_ctx
+        |> Map.put( :absorption, generate_components(plant_root_ctx.absorption_range,plant_root_ctx.absorption_count))
+        |> Map.put( :rejection, generate_components(plant_root_ctx.rejection_range,plant_root_ctx.rejection_count))
     end
 
-    def generate_absorption(plant_root_ctx) do 
-        components = for _ <- 1..(plant_root_ctx.absorption_count) do 
-            Enum.random(plant_root_ctx.absorption_range)
+    def generate_components(available_components, count) do 
+        components = for _ <- 1..(count) do 
+            Enum.random(available_components)
         end
 
         {_, components} = Enum.map_reduce(components, %{}, fn comp, acc ->
             {comp,Map.update(acc, comp, 1, &(&1 + 1))}
         end)
 
-        components = for {k,v} <- components do 
+        for {k,v} <- components do 
             %{composition: k, quantity: v}
         end
-
-        Map.put(plant_root_ctx,:absorption,components)
-    end
-
-    def generate_rejection(plant_root_ctx) do 
-        components = for _ <- 1..(plant_root_ctx.rejection_count) do 
-            Enum.random(plant_root_ctx.rejection_range)
-        end
-
-        {_, components} = Enum.map_reduce(components, %{}, fn comp, acc ->
-            {comp,Map.update(acc, comp, 1, &(&1 + 1))}
-        end)
-
-        components = for {k,v} <- components do 
-            %{composition: k, quantity: v}
-        end
-
-        Map.put(plant_root_ctx,:rejection,components)
     end
     
     def changeset(%PlantRootContext{} = ctx, attrs \\ %{}) do 

@@ -90,11 +90,15 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         plant_data
     end
 
+    @doc """
+        add/replace components to match absorption and rejection matching.
+        if it's "both" that has been selected, then add mirror of the component
+        if "right" replace each component by it's mirror.
 
-    defp apply_selection_and_matching(basic_root) do
-        # add/replace components to match absorption and rejection matching.
-        # if it's "both" that has been selected, then add mirror of the component
-        # if "right" replace each component by it's mirror.
+        order components appropriately
+    """
+    def apply_selection_and_matching(basic_root) do
+       
         abs = case basic_root.absorption_matching do
             0 -> # Left side first ... keep it as such.
                 basic_root.absorbers
@@ -366,8 +370,10 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
         end
     end
 
-    defp generate_components([], acc), do: acc
-    defp generate_components([%{composition: x,quantity: y} |rest], acc) do
+    def generate_components([], acc), do: acc
+
+    # Convert storable components into real components
+    def generate_components([%{composition: x,quantity: y} |rest], acc) do
         generate_components(rest, [%Component{composition: x, quantity: y} | acc])
     end
 
