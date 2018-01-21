@@ -3,6 +3,7 @@ defmodule UpsilonGarden.Garden do
   import Ecto
   import Ecto.Changeset
   alias UpsilonGarden.{Plant,Garden,GardenContext,GardenData,GardenProjection,Repo}
+  alias UpsilonGarden.GardenData.{Bloc}
 
 
   schema "gardens" do
@@ -57,31 +58,52 @@ defmodule UpsilonGarden.Garden do
     Generate a new Plant according to provided PlantContext
     Insert it on provided Garden segment
     Sets up plant influence on GardenData
+    returns
+      {:ok, plant}
+      {:error, :stone}
+      {:error, :prime_root}
   """
   def create_plant(garden, segment, plant_ctx) do
-    Repo.transaction( fn ->
-      # Build up a new plant associated to this garden.
-      # Generate it based on seed context.
-      plant = garden
-      |> build_assoc(:plants)
-      |> Plant.create(garden.data, segment, plant_ctx)
 
-      # Integrate plant influence onto garden
-      # (What it rejects)
-      influence = %GardenData.Influence{
-        plant_id: plant.id,
-        type: 3
-      }
+    # Checks beforehand if there is a stone or a prime root here.
+    bloc = GardenData.get_bloc(garden.data, segment,0)
+    
+    if bloc.type == Bloc.stone() do 
+      {:error, :stone}
+    else 
+      # checks for a prime root 
+      if Enum.find(bloc.influences, false, fn infl -> 
+        infl.prime_root == true 
+      end) != false do 
+        {:error, :prime_root}
+      else
+        Repo.transaction( fn ->
+          # Build up a new plant associated to this garden.
+          # Generate it based on seed context.
+          plant = garden
+          |> build_assoc(:plants)
+          |> Plant.create(garden.data, segment, plant_ctx)
 
-      data = setup_plant(garden.data, plant.data.roots, influence)
-      |> Map.put(:id, nil)
+          # Integrate plant influence onto garden
+          # (What it rejects)
+          influence = %GardenData.Influence{
+            plant_id: plant.id,
+            type: 3
+          }
 
-      # Update garden with new data.
-      garden
-      |> change()
-      |> put_embed(:data,data)
-      |> Repo.update!(returning: true)
-    end)
+          data = setup_plant(garden.data, plant.data.roots, influence)
+          |> Map.put(:id, nil)
+
+          # Update garden with new data.
+          garden
+          |> change()
+          |> put_embed(:data,data)
+          |> Repo.update!(returning: true)
+
+          plant
+        end)
+      end
+    end    
   end
 
   def setup_plant(garden_data, [],_), do: garden_data
