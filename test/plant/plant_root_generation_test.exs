@@ -425,7 +425,7 @@ defmodule UpsilonGarden.Plant.PlantRootGenerationTest do
         assert [] = PlantRoot.get_valid_neighbours(4,0,valid_blocs)
     end
 
-    test "ensure that adding a root updates appropriately next potential candidates appropriately" do
+    test "ensure that adding a root updates appropriately next potential candidates" do
         valid_blocs = %{
             0 => [3,4],
             1 => [3,4,5],
