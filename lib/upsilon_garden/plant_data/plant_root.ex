@@ -42,7 +42,7 @@ defmodule UpsilonGarden.PlantData.PlantRoot do
 
     @doc """
         Generate roots, stores them in plant data
-        returns {plant_data, new_potentials}
+        returns plant_data
     """
     def generate_roots(%GardenData{} = garden_data, %PlantData{} = plant_data, %PlantRootContext{} = root_ctx) do
         # basic root without position ...

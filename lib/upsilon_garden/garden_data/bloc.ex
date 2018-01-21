@@ -14,6 +14,14 @@ defmodule UpsilonGarden.GardenData.Bloc do
         embeds_many :influences, UpsilonGarden.GardenData.Influence
     end 
 
+    def x(bloc) do 
+        bloc.segment
+    end
+
+    def y(bloc) do 
+        bloc.position
+    end
+
     def source_string(source) do 
         case source["type"] do 
             0 -> "Components"

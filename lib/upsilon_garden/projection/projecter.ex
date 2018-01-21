@@ -1,4 +1,5 @@
 defmodule UpsilonGarden.GardenProjection.Projecter do 
+    require Logger
     alias UpsilonGarden.GardenProjection.{PartAlteration,Alteration}
     alias UpsilonGarden.PlantData.PlantRoot
     alias UpsilonGarden.GardenData.{Component}
@@ -26,8 +27,8 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
 
                     # prepare base part alteratin
                     part_alteration = %PartAlteration{
-                        root_pos_x: bloc.pos_x,
-                        root_pos_y: bloc.pos_y,
+                        root_pos_x: bloc.segment,
+                        root_pos_y: bloc.position,
                     }
 
                     # order candidates components from availables ... 
@@ -84,7 +85,7 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         if alteration.event_type == Alteration.absorption() do 
             if PlantRoot.component_match?(rejecter.composition, alteration.component) do 
                 
-                component_new_quantity = alteration.quantity - left_to_reject
+                component_new_quantity = alteration.rate - left_to_reject
 
                 # Calculating new quantity in component
                 # whats left to be absorbed by the root
@@ -130,6 +131,7 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         absorb(components_availability, absorber,  components_availability, [], absorber.quantity, absorb_mode) 
     end
 
+    defp absorb(components_availability,_absorber, [], alterations, _left_over, _absorb_mode), do:  {components_availability, alterations}
     defp absorb(components_availability,_absorber,  _left_to_do, alterations, 0, _absorb_mode), do: {components_availability, alterations}
 
     defp absorb(components_availability, absorber, [component|left_to_do], alterations, left_over, absorb_mode) do 
@@ -220,7 +222,7 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
                         alterations: []
                     }| plants]
                 idx -> 
-                    List.replace_at(plants, idx, Map.update(plants[idx], :alteration_by_parts, [], &([pa|&1])))
+                    List.replace_at(plants, idx, Map.update(Enum.at(plants,idx), :alteration_by_parts, [], &([pa|&1])))
             end
         end)
     end

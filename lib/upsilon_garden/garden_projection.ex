@@ -8,11 +8,11 @@ defmodule UpsilonGarden.GardenProjection do
     embedded_schema do 
         field :next_event, :utc_datetime
         embeds_many :plants, Plant
-
     end
 
     @doc """
         Will create a new Projection for a provided garden. 
+        returns a GardenProjection
     """
     def generate(%Garden{} = garden) do 
         plants = if Ecto.assoc_loaded?(garden.plants) do 
@@ -31,7 +31,7 @@ defmodule UpsilonGarden.GardenProjection do
             plants = sort_plants_by_celerity(plants)
 
             # iterate on each blocs, make up a budget for each plant on each bloc. add them to projection.
-            Enum.reduce(garden.segments, projection, fn segment, projection ->
+            Enum.reduce(garden.data.segments, projection, fn segment, projection ->
                 Enum.reduce(segment.blocs, projection, fn bloc, projection ->
                     roots = Enum.reduce(plants, [], fn plant, acc -> 
                         res = Enum.find(plant.data.roots, nil, fn root ->
@@ -55,40 +55,25 @@ defmodule UpsilonGarden.GardenProjection do
             %GardenProjection{}
         end
     end
-    # Seek each plant and sum up all parts.
-    defp compute_plants(projection) do 
-        Map.update(projection, :plants, [], fn plants ->
-            Enum.map(plants, fn plant ->
-                Enum.reduce(plant.alteration_by_parts, %{}, fn pa, acc -> 
-                    Enum.reduce(pa.alterations, %{}, fn alteration, pacc ->
-                        Map.put(pacc, alteration.component, alteration)
-                    end)
-                    |> Map.merge(acc, fn _key, lhs, rhs ->
-                        lhs = Map.update(lhs, :rate, lhs.rate, &(&1 + rhs.rate))
-                        case DateTime.compare(lhs.next_event, rhs.next_event) do
-                                :gt ->
-                                    Map.put(lhs, :next_event, rhs.next_event)
-                                    |> Map.put(:event_type, rhs.event_type)
-                                    |> Map.put(:event_type_id, rhs.event_type_id)
-                                :lt ->
-                                    lhs
-                                _ ->
-                                    lhs
-                        end
-                    end)
-                end)
-                |> Map.values
-            end)
-        end)
+
+    @doc """
+        Seek each plant and sum up all parts.
+        return projection
+    """
+    def compute_plants(projection) do 
+        projection
     end
 
-    # Sort plants by celerity, tie with age.
-    defp sort_plants_by_celerity(plants) do 
-        plants = Enum.sort(plants, fn lhs,rhs ->
+    @doc """
+        Sort plants by celerity, tie with age.
+        return [plants]
+    """
+    def sort_plants_by_celerity(plants) do 
+        Enum.sort(plants, fn lhs,rhs ->
             if lhs.celerity == rhs.celerity do 
                 DateTime.compare(lhs.inserted_at, rhs.inserted_at) == :lt
             else
-                lhs.celerity < rhs.celerity 
+                lhs.celerity > rhs.celerity 
             end
         end)
     end

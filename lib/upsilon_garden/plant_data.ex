@@ -26,10 +26,7 @@ defmodule UpsilonGarden.PlantData do
         # Note: we expect here that 0,0 won't be a stone, ofcourse ...
 
         plant_data = PlantRoot.generate_roots(garden_data, plant_data, plant_ctx.prime_root)
-        prime_root_count = length(plant_data.roots)
-        Logger.debug "Prime roots added: #{prime_root_count}"
         plant_data = PlantRoot.generate_roots(garden_data, plant_data, plant_ctx.secondary_root)
-        Logger.debug "Secondary roots added: #{length(plant_data.roots) - prime_root_count}"
 
         # That's it for the moment. 
         plant_data
