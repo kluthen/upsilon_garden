@@ -47,7 +47,7 @@ defmodule UpsilonGarden.GardenProjection do
 
                     components_availability = bloc.components
                     
-                    Projecter.build_projection(bloc, roots, components_availability , projection)
+                    Projecter.build_projection(bloc.segment,bloc.position, roots, components_availability , projection)
                 end)
             end)
             |> compute_plants

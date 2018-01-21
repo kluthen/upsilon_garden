@@ -8,17 +8,17 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         Generate a projection for a given bloc. 
         returns updated projection.
     """
-    def build_projection(bloc, roots, components_availability, projection) do 
+    def build_projection(x,y, roots, components_availability, projection) do 
 
         # for each root (they're pre sorted by celerity, inherited by plant order)  take the first item to absorb, solong there are items to absorb.
-        feeds(projection, bloc, components_availability, roots) 
+        feeds(projection, x,y, components_availability, roots) 
     end
 
     @doc """
         Fill Projection with data from roots. 
         returns projection
     """
-    def feeds(projection, bloc, components_availability, roots) do 
+    def feeds(projection, x,y, components_availability, roots) do 
         {roots, {projection, components_availability, should_recycle} } = Enum.map_reduce(roots,{projection, components_availability, false}, fn root, {projection, components_availability, should_recycle} ->
             case root.absorbers do 
                 [absorber|rest] -> 
@@ -27,8 +27,8 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
 
                     # prepare base part alteratin
                     part_alteration = %PartAlteration{
-                        root_pos_x: bloc.segment,
-                        root_pos_y: bloc.position,
+                        root_pos_x: x,
+                        root_pos_y: y,
                     }
 
                     # order candidates components from availables ... 
@@ -38,7 +38,10 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
                     {components_availability, alterations} = absorb(components_availability, absorber, root.absorb_mode)
 
                     # Now should seek what we reject from what we captured ! 
-                    {components_availability, alterations} = reject(components_availability, alterations, root.rejecters )
+                    {components_availability, alterations, updated_rejecters} = reject(components_availability, alterations, root.rejecters )
+
+                    # Update rejecters for later use
+                    root = Map.put(root, :rejecters, updated_rejecters)
 
                     # updating part_alteration
                     part_alteration = Map.put(part_alteration,:alterations, alterations)
@@ -63,25 +66,41 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         end)
 
         if should_recycle do 
-            feeds(projection, bloc, components_availability, roots)
+            feeds(projection, x,y, components_availability, roots)
         else
             projection
         end
     end
 
-    defp reject(components_availability, alterations, [] ), do: {components_availability, alterations}
-
-    # Seek withing rejecters if an absorption may reject
-    # if so, update components_availability with appropriate stuff
-    #        add an alteration to the stack (so that it gets published in bloc influences later on)
-    defp reject(components_availability, alterations, [rejecter|rejecters] ) do 
-        {components_availability, alterations} = reject(components_availability, alterations, alterations, rejecter, rejecter.quantity)
-        reject(components_availability, alterations, rejecters)
+    @doc """
+        Seek withing rejecters if an absorption may reject
+        if so, update components_availability with appropriate stuff
+            add an alteration to the stack (so that it gets published in bloc influences later on)
+        returns {components_availability, alterations, rejecters}
+    """
+    def reject(components_availability, alterations, rejecters ) do 
+        reject(components_availability,alterations,rejecters, [])
     end
 
-    defp reject(components_availability, alterations, [], _rejecter, _left_to_reject), do: {components_availability, alterations}
-    defp reject(components_availability, alterations, _left_to_check, _rejecter, 0), do: {components_availability, alterations}
-    defp reject(components_availability, alterations, [alteration|left_to_check], rejecter, left_to_reject) do 
+    def reject(components_availability, alterations, [], done ), do: {components_availability, alterations, done}
+
+    def reject(components_availability, alterations, [rejecter|rejecters] , done ) do 
+        {components_availability, alterations, rejecter_updated} = reject(components_availability, alterations, alterations, rejecter, rejecter.quantity)
+        {components_availability, alterations, rejecters} = reject(components_availability, alterations, rejecters, [rejecter_updated|done])
+        # removes alterations with rate < 0.1
+        alterations = Enum.reject(alterations, fn alt -> 
+            alt.rate < 0.1
+        end)
+        # removes rejecters with quantity < 0.1
+        rejecters = Enum.reject(rejecters, fn rej -> 
+            rej.quantity < 0.1
+        end)
+        {components_availability, alterations, rejecters}
+    end
+
+    def reject(components_availability, alterations, [], rejecter, _left_to_reject), do: {components_availability, alterations,rejecter}
+    def reject(components_availability, alterations, _left_to_check, rejecter, 0), do: {components_availability, alterations,rejecter}
+    def reject(components_availability, alterations, [alteration|left_to_check], rejecter, left_to_reject) do 
         if alteration.event_type == Alteration.absorption() do 
             if PlantRoot.component_match?(rejecter.composition, alteration.component) do 
                 
@@ -97,13 +116,13 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
                 end
 
                 rejection = %Alteration{
-                    component: rejecter.composition,
+                    component: alteration.component,
                     rate: consummed,
                     event_type: Alteration.rejection(),
                 }
 
                 component = %Component{
-                    composition: rejecter.composition,
+                    composition: alteration.component,
                     quantity: consummed
                 }
 
@@ -118,6 +137,9 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
                     end
                 end)
 
+                # Update rejecter ;)
+                rejecter = Map.put(rejecter, :quantity, left_to_reject)
+
                 reject([component|components_availability], [rejection|alterations], left_to_check, rejecter, left_to_reject)
             else 
                 reject(components_availability, alterations, left_to_check, rejecter, left_to_reject)
@@ -127,14 +149,23 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         end
     end
 
-    defp absorb(components_availability, absorber, absorb_mode) do 
-        absorb(components_availability, absorber,  components_availability, [], absorber.quantity, absorb_mode) 
+    @doc """
+        Seek within components availability if absorber can do their jobs
+        returns {components_availability, alterations} (updated)
+    """
+    def absorb(components_availability, absorber, absorb_mode) do 
+        {components_availability, alterations} = absorb(components_availability, absorber,  components_availability, [], absorber.quantity, absorb_mode) 
+        alterations = Enum.reject(alterations, fn alt -> 
+            alt.rate < 0.1
+        end)
+
+        {components_availability,alterations}
     end
 
-    defp absorb(components_availability,_absorber, [], alterations, _left_over, _absorb_mode), do:  {components_availability, alterations}
-    defp absorb(components_availability,_absorber,  _left_to_do, alterations, 0, _absorb_mode), do: {components_availability, alterations}
+    def absorb(components_availability,_absorber, [], alterations, _left_over, _absorb_mode), do:  {components_availability, alterations}
+    def absorb(components_availability,_absorber,  _left_to_do, alterations, 0, _absorb_mode), do: {components_availability, alterations}
 
-    defp absorb(components_availability, absorber, [component|left_to_do], alterations, left_over, absorb_mode) do 
+    def absorb(components_availability, absorber, [component|left_to_do], alterations, left_over, absorb_mode) do 
         if PlantRoot.component_match?(absorber.composition, component.composition) do 
             # We found a match ! 
 
@@ -174,15 +205,11 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
                 end)
 
                 # Generate alterations and new components available due to rejections
-                {rejected, rejected_components} = Enum.reduce(rejects_components, {[],[]}, fn reject, {absorbed,components} ->
-                    {[%Alteration{
-                        component: reject,
-                        rate: consummed,
-                        event_type: Alteration.rejection(),
-                    }|absorbed], [%Component{
+                rejected_components = Enum.reduce(rejects_components,[], fn reject, components ->
+                    [%Component{
                         composition: reject,
                         quantity: consummed
-                    }|components]}
+                    }|components]
                 end)
 
                 # Updating component (updating its quantity)
@@ -193,8 +220,11 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
                         compo
                     end
                 end)
+                |> Enum.reject(fn compo -> 
+                    compo.quantity < 0.1
+                end)
                 
-                absorb(components_availability ++ rejected_components , absorber, left_to_do ++ rejected_components, absorbed ++ rejected ++ alterations, left_over, absorb_mode)
+                absorb(components_availability ++ rejected_components , absorber, left_to_do ++ rejected_components, absorbed ++ alterations, left_over, absorb_mode)
             else # Components has 0 quantity
                 absorb(components_availability, absorber, left_to_do, alterations, left_over, absorb_mode)
             end
