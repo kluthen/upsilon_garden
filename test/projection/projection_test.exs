@@ -1,11 +1,9 @@
 defmodule UpsilonGarden.Projection.ProjectionTest do 
     use ExUnit.Case, async: false
     import Ecto.Query
-    import Ecto
     import Ecto.Changeset
     require Logger
-    alias UpsilonGarden.{User,Garden,GardenData,Repo,Plant,PlantContext,GardenProjection}
-    alias UpsilonGarden.GardenData.{Bloc,Influence}
+    alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContext,GardenProjection}
 
     setup do
         # Allows Ecto to exists here:
@@ -78,7 +76,7 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
         },%Plant{
             id: 2,
             celerity: 5,
-            inserted_at: Map.update(DateTime.utc_now(), :year, 0, &(&1 + 1))
+            inserted_at: Map.update(DateTime.utc_now(), :year, 0, &(&1 + 1)) # ensure it's older ;)
         },%Plant{
             id: 3,
             celerity: 2,
