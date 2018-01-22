@@ -97,6 +97,7 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
 
     test "ensure sum of a plant projection is correct" do 
         # GardenProjection.compute_plants(projection)
+        
     end
 
 end
