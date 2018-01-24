@@ -235,4 +235,5 @@ defmodule UpsilonGarden.Projection.ProjectionBlocTest do
 
         assert [%Alteration{component: "CD", rate: 0.2, event_type: 0},%Alteration{component: "AB", rate: 0.2, event_type: 0},%Alteration{component: "CD", rate: 0.8, event_type: 1},%Alteration{component: "AB", rate: 0.8, event_type: 1}] = pa.alterations
     end
+
 end

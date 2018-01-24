@@ -9,7 +9,6 @@ defmodule UpsilonGarden.GardenProjection.Projecter do
         returns updated projection.
     """
     def build_projection(x,y, roots, components_availability, projection) do 
-
         # for each root (they're pre sorted by celerity, inherited by plant order)  take the first item to absorb, solong there are items to absorb.
         feeds(projection, x,y, components_availability, roots) 
     end
