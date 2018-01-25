@@ -3,7 +3,7 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
     import Ecto.Query
     import Ecto.Changeset
     require Logger
-    alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContext,GardenProjection}
+    alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContent,PlantContext,GardenProjection}
     alias UpsilonGarden.GardenProjection.{PartAlteration,Alteration}
 
     setup do
@@ -139,13 +139,24 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
             ]
         }
 
-        projection = GardenProjection.compute_plants(projection)
+        plt = %Plant{
+            id: 1,
+            content: %PlantContent{
+                max_size: 310,
+                current_size: 0
+            }
+        }
+
+        projection = GardenProjection.compute_plants(projection,[plt])
+
+        next_event = UpsilonGarden.Tools.compute_next_date(11)
 
         assert [
             %Alteration{
                 component: "AB", 
                 event_type: 1,
-                rate: 20.0
+                rate: 20.0,
+                next_event: next_event
             },
             %Alteration{
                 component: "DAB", 
@@ -155,9 +166,12 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
             %Alteration{
                 component: "DAB", 
                 event_type: 1,
-                rate: 10.0
+                rate: 10.0,
+                next_event: next_event
             }
         ] = Enum.at(projection.plants,0).alterations
+
+        assert Enum.at(projection.plants,0).next_event == next_event
         
     end
 

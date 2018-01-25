@@ -10,6 +10,8 @@ defmodule UpsilonGarden.PlantContent do
 
     embedded_schema do 
         embeds_many :contents, Component
+        field :max_size, :float
+        field :current_size, :float
     end
 
     def changeset(%PlantContent{} = root, attrs \\ %{}) do 

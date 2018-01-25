@@ -5,6 +5,7 @@ defmodule UpsilonGarden.GardenProjection.Plant do
 
     embedded_schema do 
         field :plant_id, :integer
+        field :next_event, :utc_datetime
         embeds_many :alterations, Alteration
         embeds_many :alteration_by_parts, PartAlteration
     end

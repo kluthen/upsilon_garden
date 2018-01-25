@@ -24,7 +24,11 @@ defmodule UpsilonGarden.Plant do
     Store it in DB.
   """
   def create(plant, garden_data, segment, plant_ctx) do
-    content = %PlantContent{}
+    content = %PlantContent{
+      max_size: 1000.0,
+      current_size: 0.0,
+      contents: []
+    }
     plant_ctx = Map.merge(PlantContext.default, plant_ctx)
     |> PlantContext.roll_dices
 

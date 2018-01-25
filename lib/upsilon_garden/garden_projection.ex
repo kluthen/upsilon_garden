@@ -57,11 +57,11 @@ defmodule UpsilonGarden.GardenProjection do
                 Projecter.build_projection(bloc.segment,bloc.position, roots, components_availability , projection)
             end)
         end)
-        |> compute_plants()
+        |> compute_plants(plants)
         
     end
 
-    def compute_plants(projection) do 
+    def compute_plants(projection,plants) do 
         # Update projections to sums parts into general plant based projection.
         # We don't have access to plants here so, we can't compute end date.
         Map.update(projection, :plants, [], fn plants_alterations -> 
@@ -76,7 +76,38 @@ defmodule UpsilonGarden.GardenProjection do
                 |> Map.values
                 |> List.flatten
 
-                Map.put(plant, :alterations, alterations)
+                total = Enum.reduce(alterations, 0, fn alt, acc -> 
+                    if alt.event_type == Alteration.absorption() do 
+                        acc + alt.rate 
+                    else 
+                        acc
+                    end
+                end)
+
+                plt = Enum.find(plants, nil, fn p ->
+                    p.id == plant.plant_id 
+                end)
+
+                # well, if not found, we do have a big problem here ;)
+                if total > 0 do 
+                    turns_to_full = Float.ceil(((plt.content.max_size - plt.content.current_size)/1) / total) 
+                    next_event = UpsilonGarden.Tools.compute_next_date(turns_to_full)
+                    alterations = Enum.map(alterations, fn alt -> 
+                        if alt.event_type == Alteration.absorption() do 
+                            Map.put(alt,:next_event, next_event)
+                        else
+                            alt
+                        end
+                    end)
+
+                    plant
+                    |> Map.put(:alterations, alterations)
+                    |> Map.put(:next_event, next_event)
+                else 
+
+                    plant
+                    |> Map.put(:alterations, alterations)
+                end
             end) 
         end)  
     end
