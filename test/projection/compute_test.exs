@@ -27,18 +27,22 @@ defmodule UpsilonGarden.Projection.ComputeTest do
         {:ok, garden: garden, user: user, plant: plant}
     end
 
+    @tag :not_implemented
     test "when projection provides no data, recompute projection and try again" do 
         flunk "not implemented"
     end
 
+    @tag :not_implemented
     test "when projection is still empty does nothing beside updating garden" do 
         flunk "not implemented"
     end
 
+    @tag :not_implemented
     test "compute plant new storage after a few minutes have lapsed." do 
         flunk "not implemented"
     end
 
+    @tag :not_implemented
     test "a plant reaching its storage limits force a recompute of projection and a new projection plan is to be applied" do 
         flunk "not implemented"
     end

@@ -96,7 +96,7 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
         }] = plants
     end
 
-    test "ensure sum of a plant projection is correct with appropriate date for store related absorptions" do 
+    test "plant projection ends date is the last turn where all alteration can be filled" do 
         projection = %GardenProjection{
             plants: [
                 %GardenProjection.Plant{
@@ -176,7 +176,67 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
         assert projection.next_event == next_event
     end
 
+    
+    test "if all alterations cant be filled a turn, then end date is next turn" do 
+        projection = %GardenProjection{
+            plants: [
+                %GardenProjection.Plant{
+                    plant_id: 1,
+                    alteration_by_parts: [
+                        %GardenProjection.PartAlteration{
+                            root_pos_x: 4,
+                            root_pos_y: 0,
+                            alterations: [
+                                %Alteration{
+                                    component: "AB", 
+                                    event_type: 1,
+                                    rate: 10.0
+                                },
+                                %Alteration{
+                                    component: "DAB", 
+                                    event_type: 1,
+                                    rate: 10.0
+                                }
+                            ]
+                        },
+                        %GardenProjection.PartAlteration{
+                            root_pos_x: 4,
+                            root_pos_y: 1,
+                            alterations: [
+                                %Alteration{
+                                    component: "AB", 
+                                    event_type: 1,
+                                    rate: 10.0
+                                },
+                                %Alteration{
+                                    component: "DAB", 
+                                    event_type: 0,
+                                    rate: 3.0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+
+        plt = %Plant{
+            id: 1,
+            content: %PlantContent{
+                max_size: 310,
+                current_size: 290   # out of 30.0, can't fill all
+            }
+        }
+
+        projection = GardenProjection.compute_plants(projection,[plt])
+
+        next_event = UpsilonGarden.Tools.compute_next_date(1)
+
+        assert Enum.at(projection.plants,0).next_event == next_event
+        assert projection.next_event == next_event
+    end
+
+    @tag :not_implemented
     test "removes plants from projection when they can't handle any absorption" do 
-        flunk "not implemented"
     end
 end
