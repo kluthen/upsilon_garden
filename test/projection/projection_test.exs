@@ -4,7 +4,7 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
     import Ecto.Changeset
     require Logger
     alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContent,PlantContext,GardenProjection}
-    alias UpsilonGarden.GardenProjection.{PartAlteration,Alteration}
+    alias UpsilonGarden.GardenProjection.{Alteration}
 
     setup do
         # Allows Ecto to exists here:

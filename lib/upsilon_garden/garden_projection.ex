@@ -93,8 +93,7 @@ defmodule UpsilonGarden.GardenProjection do
                 # well, if not found, we do have a big problem here ;)
                 if total > 0 do 
                     turns_to_full = round(Float.floor(((plt.content.max_size - plt.content.current_size)/1) / total)) 
-                    turns_to_full =
-                    if turns_to_full > 0 do 
+                    turns_to_full = if turns_to_full > 0 do 
                         turns_to_full 
                     else
                         1

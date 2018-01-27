@@ -1,10 +1,8 @@
 defmodule UpsilonGarden.Projection.ComputeTest do 
     use ExUnit.Case, async: false
     import Ecto.Query
-    import Ecto.Changeset
     require Logger
-    alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContent,PlantContext,GardenProjection}
-    alias UpsilonGarden.GardenProjection.{PartAlteration,Alteration}
+    alias UpsilonGarden.{User,Garden,Repo,PlantContext}
 
     setup do
         # Allows Ecto to exists here:

@@ -1,5 +1,5 @@
 defmodule UpsilonGarden.Tools do 
-
+    require Logger
     @doc """
         Provided a list of {element, nb_elements_to_add}
         will create a new list containing elements 
@@ -27,7 +27,7 @@ defmodule UpsilonGarden.Tools do
     end
 
     def compute_next_date(base_date, turns) do 
-        second =  round(turns * @seconds_by_turn + @seconds_by_turn - base_date.second)
+        second =  round(turns * @seconds_by_turn + (@seconds_by_turn - rem(base_date.second,@seconds_by_turn)))
         Timex.shift(base_date, seconds: second)
         |> Map.put(:microsecond, {0,0})
     end
