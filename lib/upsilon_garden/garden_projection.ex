@@ -2,6 +2,7 @@ defmodule UpsilonGarden.GardenProjection do
     use Ecto.Schema
     import Ecto.Query
     import Ecto.Changeset
+    require Logger
     alias UpsilonGarden.{Garden,GardenProjection,Repo}
     alias UpsilonGarden.GardenProjection.{Plant,Projecter,Alteration}
 
@@ -23,6 +24,10 @@ defmodule UpsilonGarden.GardenProjection do
             |> Repo.all
         end
 
+        # Sort plants according to their celerity.
+        plants = sort_plants_by_celerity(plants)
+        |> prune_plants_by_available_store
+
         if length(plants) != 0 do 
             project(garden, plants) 
         else
@@ -33,9 +38,6 @@ defmodule UpsilonGarden.GardenProjection do
     def project(garden, plants) do 
         # No plants, no projection :)
         projection = %GardenProjection{}
-
-        # Sort plants according to their celerity.
-        plants = sort_plants_by_celerity(plants)
 
         # iterate on each blocs, make up a budget for each plant on each bloc. add them to projection.
         Enum.reduce(garden.data.segments, projection, fn segment, projection ->
@@ -64,7 +66,7 @@ defmodule UpsilonGarden.GardenProjection do
     def compute_plants(projection,plants) do 
         # Update projections to sums parts into general plant based projection.
         # We don't have access to plants here so, we can't compute end date.
-        Map.update(projection, :plants, [], fn plants_alterations -> 
+        projection = Map.update(projection, :plants, [], fn plants_alterations -> 
             Enum.map(plants_alterations, fn plant ->
                 alterations = Enum.reduce(plant.alteration_by_parts, %{}, fn pa, acc -> 
                     Enum.reduce(pa.alterations, acc, fn alt, acc -> 
@@ -90,7 +92,7 @@ defmodule UpsilonGarden.GardenProjection do
 
                 # well, if not found, we do have a big problem here ;)
                 if total > 0 do 
-                    turns_to_full = Float.ceil(((plt.content.max_size - plt.content.current_size)/1) / total) 
+                    turns_to_full = round(Float.floor(((plt.content.max_size - plt.content.current_size)/1) / total)) 
                     next_event = UpsilonGarden.Tools.compute_next_date(turns_to_full)
                     alterations = Enum.map(alterations, fn alt -> 
                         if alt.event_type == Alteration.absorption() do 
@@ -109,7 +111,22 @@ defmodule UpsilonGarden.GardenProjection do
                     |> Map.put(:alterations, alterations)
                 end
             end) 
-        end)  
+        end) 
+
+
+        next_event = Enum.reduce(projection.plants, Map.put(DateTime.utc_now, :microsecond, {0,0}) , fn p, old_date -> 
+            if p.next_event != nil do 
+                if DateTime.diff(old_date,p.next_event) < 0 do 
+                    p.next_event
+                else
+                    old_date
+                end 
+            else 
+                old_date
+            end
+        end)
+
+        Map.put(projection, :next_event, next_event)
     end
 
     @doc """
@@ -123,6 +140,15 @@ defmodule UpsilonGarden.GardenProjection do
             else
                 lhs.celerity > rhs.celerity 
             end
+        end)
+    end
+
+    @doc """
+        Remove from projection plants that can't feed themselves.
+    """
+    def prune_plants_by_available_store(plants) do 
+        Enum.reject(plants, fn p ->
+           p.content.current_size > p.content.max_size 
         end)
     end
 

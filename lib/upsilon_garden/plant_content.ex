@@ -14,6 +14,39 @@ defmodule UpsilonGarden.PlantContent do
         field :current_size, :float
     end
 
+    def apply_alteration(content, alteration, 1, rate) do 
+        value = Float.round(alteration.rate * rate,2)
+        apply_alteration(content, alteration, value)
+    end
+    
+    def apply_alteration(content, alteration, turns, _rate) do 
+        value = Float.round(alteration.rate * turns,2)
+        apply_alteration(content, alteration, value)
+    end
+
+    def apply_alteration(content, alteration, value) do 
+        case Enum.find(content.contents, nil, &(&1.composition == alteration.component)) do 
+            nil -> 
+                new_compo = %Component{
+                    composition: alteration.component,
+                    quantity: value
+                } 
+
+                Map.update(content, :contents, [new_compo] , &([new_compo| &1]) )
+                |> Map.update(:current_size, content.current_size, &(&1 + value))
+            component -> 
+                contents = Enum.map(content.contents, fn compo -> 
+                    if compo.composition == alteration.component do 
+                        Map.update(compo, :quantity, 0, &(&1 + value))
+                    else
+                        compo
+                    end
+                end)
+                Map.put(content, :contents, contents)
+                |> Map.update(:current_size, content.current_size, &(&1 + value))
+        end
+    end
+
     def changeset(%PlantContent{} = root, attrs \\ %{}) do 
         root
         |> cast(attrs, [])

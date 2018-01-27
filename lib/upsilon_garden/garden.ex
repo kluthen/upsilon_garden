@@ -2,8 +2,9 @@ defmodule UpsilonGarden.Garden do
   use Ecto.Schema
   import Ecto
   import Ecto.Changeset
-  alias UpsilonGarden.{Plant,Garden,GardenContext,GardenData,GardenProjection,Repo}
+  alias UpsilonGarden.{Plant,PlantContent,Garden,GardenContext,GardenData,GardenProjection,Repo}
   alias UpsilonGarden.GardenData.{Bloc}
+  alias UpsilonGarden.GardenProjection.{Alteration}
 
 
   schema "gardens" do
@@ -19,7 +20,7 @@ defmodule UpsilonGarden.Garden do
     has_many :plants, UpsilonGarden.Plant
     has_many :sources, UpsilonGarden.Source
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
 
@@ -138,6 +139,102 @@ defmodule UpsilonGarden.Garden do
     |> change()
     |> put_embed(:data,data)
     |> Repo.update!(returning: true)
+  end
+
+  @doc """
+    Compute all plants up to now. Use projections up to next event date or now
+    If next event date is reached, recompute new projection and so on. 
+    Updates garden and return it once updated. ( or not.)
+  """
+  def compute_update(garden) do 
+    garden = 
+    if not Ecto.assoc_loaded?(garden.plants) do
+      garden
+    else
+      garden
+    end
+
+    projection =
+    if length(garden.projection.plants) == 0 do 
+      GardenProjection.generate(garden)
+    else
+      garden.projection
+    end
+
+    if length(projection.plants) == 0 do 
+      # still nothing, well no updates :)
+      garden
+      |> change
+      |> Repo.update!(returning: true)
+    else 
+      previous_date = garden.updated_at
+      compute_update(garden, projection, previous_date, projection.next_event)
+    end 
+  end
+
+  def compute_update(garden, projection, previous_date, next_date) do 
+    if DateTime.diff(next_date, DateTime.utc_now) <= 0 do 
+      turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date) 
+      garden = compute_update(garden,projection, turns)
+      # Compute a new projection
+      projection = GardenProjection.generate(garden)
+      
+      # redo compute_udpate.
+      compute_update(garden, projection, next_date, projection.next_event)
+    else
+      turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now) 
+      garden = compute_update(garden,projection, turns)
+      # Compute a new projection
+      projection = GardenProjection.generate(garden)
+
+      Map.put(garden, :projection, projection) # returns updated garden. 
+    end
+  end
+
+  def compute_update(garden, projection, turns) when turns > 0 do 
+      # Apply projection to all plants store.
+      updated_plants = Enum.map(garden.plants,  fn plant -> 
+        pa = Enum.find(projection.plants, nil, fn p -> 
+          p.plant_id == plant.id
+        end)
+
+        total = Enum.reduce(pa.alterations, 0, fn alt, acc ->
+          if alt.event_type == Alteration.absorption() do 
+            acc + alt.rate
+          else 
+            acc
+          end
+        end)
+
+        {rate, filled} = 
+        if plant.content.current_size + total > plant.content.max_size do 
+            {Float.round((plant.content.max_size - plant.content.current_size)/total,2), true}
+        else 
+            {1.0, false}
+        end
+
+        # We found appropriate plant alteration. now update its store. 
+
+
+        content = Enum.reduce(pa.alterations, plant.content, fn alteration, content ->
+          PlantContent.apply_alteration(content, alteration, turns,rate)
+        end)
+
+        content = 
+        if filled do 
+          Map.put(content, :current_size, content.max_size)
+        else 
+          content
+        end
+
+        Map.put(plant, :content, content)
+      end)
+
+      Map.put(garden, :plants, updated_plants)
+  end
+
+  def compute_update(garden, _projection, turns) when turns == 0 do 
+    garden
   end
 
   @doc false

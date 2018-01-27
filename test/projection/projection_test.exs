@@ -149,9 +149,9 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
 
         projection = GardenProjection.compute_plants(projection,[plt])
 
-        next_event = UpsilonGarden.Tools.compute_next_date(11)
+        next_event = UpsilonGarden.Tools.compute_next_date(10)
 
-        assert [
+        test_value = [
             %Alteration{
                 component: "AB", 
                 event_type: 1,
@@ -169,10 +169,14 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
                 rate: 10.0,
                 next_event: next_event
             }
-        ] = Enum.at(projection.plants,0).alterations
+        ]
 
+        assert test_value = Enum.at(projection.plants,0).alterations
         assert Enum.at(projection.plants,0).next_event == next_event
-        
+        assert projection.next_event == next_event
     end
 
+    test "removes plants from projection when they can't handle any absorption" do 
+        flunk "not implemented"
+    end
 end
