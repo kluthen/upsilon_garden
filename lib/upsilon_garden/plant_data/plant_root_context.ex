@@ -79,9 +79,9 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
     """
     def default_prime do 
         %PlantRootContext{
-            absorption_range: prepare_range([{"AB",7},{"A",3}, {"BC",2}, {"C", 1}, {"B",1}]),
+            absorption_range: prepare_range([{"AB",7},{"A",10}, {"BC",2}, {"C", 1}, {"B",1}]),
             absorption_rate_range: prepare_range([{1.8,3},{2,5},{2.2,2}]),
-            absorption_count_range: prepare_range([{3,3},{4,5},{2,2}]),
+            absorption_count_range: prepare_range([{3,3},{6,5},{2,2}]),
             rejection_range: prepare_range([{"C",1}, {"B",1}, {"A",1}]),
             rejection_rate_range: prepare_range([{0.2,3},{0.4,5},{0.8,2}]),
             rejection_count_range: prepare_range([{1,3},{2,5},{3,2}]),
@@ -101,9 +101,9 @@ defmodule UpsilonGarden.PlantData.PlantRootContext do
 
     def default_secondary do 
         %PlantRootContext{
-            absorption_range: prepare_range([{"AB",7},{"A",3}, {"BC",2}, {"C", 1}, {"B",1}]),
+            absorption_range: prepare_range([{"AB",7},{"A",15}, {"BC",2}, {"C", 1}, {"B",1}]),
             absorption_rate_range: prepare_range([{0.9,3},{1,5},{1.1,2}]),
-            absorption_count_range: prepare_range([{3,3},{4,5},{2,2}]),
+            absorption_count_range: prepare_range([{3,3},{4,6},{2,2}]),
             rejection_range: prepare_range([{"C",1}, {"B",1}, {"A",1}]),
             rejection_rate_range: prepare_range([{0.1,3},{0.2,5},{0.4,2}]),
             rejection_count_range: prepare_range([{1,3},{2,5},{3,2}]),

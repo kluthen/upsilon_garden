@@ -44,8 +44,8 @@ defmodule UpsilonGarden.GardenContext do
         
     def default do 
         %GardenContext{
-            available_components: prepare_range([{"ABC", 10}, {"AB",8},{"A",6},{"AC",3},{"BC",2},{"E",1},{"D",1}]),
-            components_by_bloc: prepare_range([{4,1},{5,3},{6,1}]),
+            available_components: prepare_range([{"ABC", 10}, {"AB",16},{"A",12},{"AC",3},{"BC",2},{"E",1},{"D",1}]),
+            components_by_bloc: prepare_range([{4,1},{8,8},{6,1}]),
             depth_range: prepare_range([{8,1},{9,1},{10,2},{11,1},{12,1}]),
             dimension_range: prepare_range([{10,1}]),
             sunshine_range: prepare_range([{0.85,1},{0.87,2},{0.90,5},{0.92,2},{0.95,1}]),

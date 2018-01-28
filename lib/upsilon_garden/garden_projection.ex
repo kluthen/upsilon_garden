@@ -106,25 +106,34 @@ defmodule UpsilonGarden.GardenProjection do
                 else 
 
                     plant
+                    |> Map.put(:next_event, nil)
                     |> Map.put(:alterations, alterations)
                 end
             end) 
         end) 
 
-
-        next_event = Enum.reduce(projection.plants, Map.put(DateTime.utc_now, :microsecond, {0,0}) , fn p, old_date -> 
-            if p.next_event != nil do 
-                if DateTime.diff(old_date,p.next_event) < 0 do 
-                    p.next_event
-                else
-                    old_date
-                end 
-            else 
-                old_date
-            end
+        all_nil = Enum.reduce(projection.plants, true, fn _p, false -> false
+                                                %UpsilonGarden.GardenProjection.Plant{next_event: nil}, true -> true
+                                                _,_ -> false
         end)
 
-        Map.put(projection, :next_event, next_event)
+        if all_nil do 
+            Map.put(projection, :next_event, nil)
+        else
+            next_event = Enum.reduce(projection.plants, Map.put(DateTime.utc_now, :microsecond, {0,0}) , fn p, old_date -> 
+                if p.next_event != nil do 
+                    if DateTime.diff(old_date,p.next_event) < 0 do 
+                        p.next_event
+                    else
+                        old_date
+                    end 
+                else 
+                    old_date
+                end
+            end)
+
+            Map.put(projection, :next_event, next_event)
+        end
     end
 
     @doc """

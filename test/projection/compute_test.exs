@@ -53,24 +53,41 @@ defmodule UpsilonGarden.Projection.ComputeTest do
 
     test "compute plant new storage after a few minutes have lapsed.", context do 
         # force last update of the garden to a minutes backward, which should proves sufficient to make at least 3 turns
-        from_date = Timex.shift(context.garden.updated_at, minutes: -1)
-        garden = Map.put(context.garden, :updated_at, from_date)
+        from_date = Timex.shift(DateTime.utc_now, minutes: -1)
+        {garden,projection} = Garden.prepare_projection(context.garden) 
+        garden = Map.put(garden, :updated_at, from_date)
+
+        # Note: there is a possibility where projection can't happend ...
+        # Must means that fluke provided no support for plant evolution ...
+        # should ensure that default plant can survive in there.
+        garden = Garden.compute_update(garden)
 
         turns = UpsilonGarden.Tools.compute_elapsed_turns(from_date)
-        garden = Garden.compute_update(garden)
 
         garden = Repo.preload(garden,:plants)
 
         [plant] = garden.plants
-        [palts] = garden.projection.plants
+        [palts] = projection.plants
         total = Alteration.total(palts.alterations)
 
-        assert plant.content.current_size == turns * total 
+        assert plant.content.current_size == Float.round(turns * total,2) 
     end
 
     @tag :not_implemented
-    test "a plant reaching its storage limits force a recompute of projection and a new projection plan is to be applied" do 
-        flunk "not implemented"
+    test "a plant reaching its storage limits force a recompute of projection and a new projection plan is to be applied", context do 
+        # force last update of the garden to a minutes backward, which should proves sufficient to make at least 3 turns
+        from_date = Timex.shift(DateTime.utc_now, minutes: -1)
+        {garden,projection} = Garden.prepare_projection(context.garden) 
+        projection = Map.put(projection, :next_event, Timex.shift(DateTime.utc_now, second: -30))
+        garden = Map.put(garden, :updated_at, from_date)
+        |> Map.put(:projection, projection)
+
+        # Note: there is a possibility where projection can't happend ...
+        # Must means that fluke provided no support for plant evolution ...
+        # should ensure that default plant can survive in there.
+        garden = Garden.compute_update(garden)
+        
+        assert DateTime.diff(garden.projection.next_event, projection.next_event) > 0
     end
 
     test "can apply an alteration for a few turns on content" do 

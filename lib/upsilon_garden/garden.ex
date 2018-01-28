@@ -1,6 +1,7 @@
 defmodule UpsilonGarden.Garden do
   use Ecto.Schema
   import Ecto
+  require Logger
   import Ecto.Changeset
   alias UpsilonGarden.{Plant,PlantContent,Garden,GardenContext,GardenData,GardenProjection,Repo}
   alias UpsilonGarden.GardenData.{Bloc}
@@ -184,21 +185,22 @@ defmodule UpsilonGarden.Garden do
   end
 
   def compute_update(garden, projection, previous_date, next_date) do 
-    if DateTime.diff(next_date, DateTime.utc_now) <= 0 do 
-      turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date) 
-      garden = compute_update(garden,projection, turns)
-      # Compute a new projection
-      projection = GardenProjection.generate(garden)
-      
-      # redo compute_udpate.
-      compute_update(garden, projection, next_date, projection.next_event)
-    else
-      turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now) 
-      garden = compute_update(garden,projection, turns)
-      # Compute a new projection
-      projection = GardenProjection.generate(garden)
-
-      Map.put(garden, :projection, projection) # returns updated garden. 
+    if next_date != nil do  
+      if DateTime.diff(next_date, DateTime.utc_now) <= 0 do 
+        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date) 
+        garden = compute_update(garden,projection, turns)
+        # Compute a new projection
+        projection = GardenProjection.generate(garden)
+        
+        # redo compute_udpate.
+        compute_update(garden, projection, next_date, projection.next_event)
+      else
+        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now) 
+        garden = compute_update(garden,projection, turns) # No need to recompute a projection as it hasn't changed.
+      end
+    else 
+      # projection can't project.
+      garden
     end
   end
 
@@ -209,13 +211,7 @@ defmodule UpsilonGarden.Garden do
           p.plant_id == plant.id
         end)
 
-        total = Enum.reduce(pa.alterations, 0, fn alt, acc ->
-          if alt.event_type == Alteration.absorption() do 
-            acc + alt.rate
-          else 
-            acc
-          end
-        end)
+        total = Alteration.total(pa.alterations)
 
         {rate, filled} = 
         if plant.content.current_size + total > plant.content.max_size do 
@@ -236,6 +232,7 @@ defmodule UpsilonGarden.Garden do
           Map.put(content, :current_size, content.max_size)
         else 
           content
+          |> Map.put(:current_size, Float.round(content.current_size, 2))
         end
 
         Map.put(plant, :content, content)
