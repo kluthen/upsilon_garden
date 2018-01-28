@@ -11,6 +11,14 @@ defmodule UpsilonGarden.PlantData do
         field :plant_id, :integer
     end
 
+    def build do 
+        %PlantData {
+            roots: [],
+            segment: 0,
+            plant_id: 0,
+        }
+    end
+
     @doc """
         Based on PlantContext, generate a build structural plant.
         ATM, it will mostly generate roots, seek how to position them. 

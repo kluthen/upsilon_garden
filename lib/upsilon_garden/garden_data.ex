@@ -1,11 +1,17 @@
 defmodule UpsilonGarden.GardenData do 
     use Ecto.Schema
     import Ecto.Changeset
-    alias UpsilonGarden.{Garden,Source}
+    alias UpsilonGarden.{Garden,Source,GardenData}
     alias UpsilonGarden.GardenData.{Segment,Influence}
 
     embedded_schema do 
         embeds_many :segments, UpsilonGarden.GardenData.Segment
+    end
+
+    def build do 
+        %GardenData{
+            segments: []
+        }
     end
 
     def changeset(%UpsilonGarden.GardenData{} = data, _attrs \\ %{}) do

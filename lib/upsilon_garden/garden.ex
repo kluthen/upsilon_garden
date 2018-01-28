@@ -39,6 +39,8 @@ defmodule UpsilonGarden.Garden do
       garden = garden
       |> change(dimension: context.dimension)
       |> put_embed(:context, context)
+      |> put_embed(:data, GardenData.build())
+      |> put_embed(:projection, GardenProjection.build())
       |> Repo.insert!(returning: true)
 
       # Generate the garden according to provided context
@@ -142,16 +144,14 @@ defmodule UpsilonGarden.Garden do
   end
 
   @doc """
-    Compute all plants up to now. Use projections up to next event date or now
-    If next event date is reached, recompute new projection and so on. 
-    Updates garden and return it once updated. ( or not.)
+    Ensure projection can occurs
   """
-  def compute_update(garden) do 
+  def prepare_projection(garden) do 
     garden = 
     if not Ecto.assoc_loaded?(garden.plants) do
       garden
     else
-      garden
+      Repo.preload(garden, :plants)
     end
 
     projection =
@@ -160,6 +160,17 @@ defmodule UpsilonGarden.Garden do
     else
       garden.projection
     end
+
+    {garden, projection}
+  end
+
+  @doc """
+    Compute all plants up to now. Use projections up to next event date or now
+    If next event date is reached, recompute new projection and so on. 
+    Updates garden and return it once updated. ( or not.)
+  """
+  def compute_update(garden) do 
+    {garden, projection} = prepare_projection(garden)
 
     if length(projection.plants) == 0 do 
       # still nothing, well no updates :)

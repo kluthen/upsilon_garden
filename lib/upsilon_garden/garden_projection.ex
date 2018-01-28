@@ -11,6 +11,13 @@ defmodule UpsilonGarden.GardenProjection do
         embeds_many :plants, Plant
     end
 
+    def build do 
+        %GardenProjection{
+            next_event: nil,
+            plants: []
+        }
+    end
+
     @doc """
         Will create a new Projection for a provided garden. 
         returns a GardenProjection
@@ -31,13 +38,13 @@ defmodule UpsilonGarden.GardenProjection do
         if length(plants) != 0 do 
             project(garden, plants) 
         else
-            %GardenProjection{}
+            GardenProjection.build
         end
     end
 
     def project(garden, plants) do 
         # No plants, no projection :)
-        projection = %GardenProjection{}
+        projection = GardenProjection.build
 
         # iterate on each blocs, make up a budget for each plant on each bloc. add them to projection.
         Enum.reduce(garden.data.segments, projection, fn segment, projection ->
@@ -139,7 +146,7 @@ defmodule UpsilonGarden.GardenProjection do
     """
     def prune_plants_by_available_store(plants) do 
         Enum.reject(plants, fn p ->
-           p.content.current_size > p.content.max_size 
+           p.content.max_size - p.content.current_size < 0.1
         end)
     end
 

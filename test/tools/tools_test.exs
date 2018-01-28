@@ -24,5 +24,18 @@ defmodule UpsilonGarden.Tools.ToolsTest do
         
         assert %DateTime{minute: 1, second: 0} = date
     end
+
+    test "ensure elapsed turns provided an accurate value" do 
+        from = DateTime.utc_now
+        |> Map.put(:hour,1)
+        |> Map.put(:minute,0)
+        |> Map.put(:second,0)
+        to = DateTime.utc_now
+        |> Map.put(:hour,1)
+        |> Map.put(:minute,1)
+        |> Map.put(:second,0)
+
+        assert 4 = Tools.compute_elapsed_turns(from, to)
+    end
     
 end

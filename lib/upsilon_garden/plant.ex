@@ -24,18 +24,15 @@ defmodule UpsilonGarden.Plant do
     Store it in DB.
   """
   def create(plant, garden_data, segment, plant_ctx) do
-    content = %PlantContent{
-      max_size: 1000.0,
-      current_size: 0.0,
-      contents: []
-    }
+
     plant_ctx = Map.merge(PlantContext.default, plant_ctx)
     |> PlantContext.roll_dices
 
     plant = plant
     |> changeset(%{segment: segment, name: "My Plant"})
     |> put_embed(:context, plant_ctx)
-    |> put_embed(:content, content)
+    |> put_embed(:data, PlantData.build())
+    |> put_embed(:content, PlantContent.build(plant_ctx))
     |> Repo.insert!(returning: true)
 
     # Based on seed, create an actual root network, and setup objectives for next stage.

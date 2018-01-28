@@ -2,7 +2,7 @@ defmodule UpsilonGarden.Projection.ComputeTest do
     use ExUnit.Case, async: false
     import Ecto.Query
     require Logger
-    alias UpsilonGarden.{User,Garden,Repo,PlantContext,PlantContent}
+    alias UpsilonGarden.{User,Garden,Repo,PlantContext,PlantContent,GardenProjection}
     alias UpsilonGarden.GardenData.Component
     alias UpsilonGarden.GardenProjection.{Alteration}
 
@@ -17,6 +17,7 @@ defmodule UpsilonGarden.Projection.ComputeTest do
         # Plant is set up on segment 4 ( only 3,4,5 are available by default )
         # It's also added to the garden !
         {:ok, plant} = Garden.create_plant(garden,4,PlantContext.default)
+        garden = Garden |> last |> preload(:plants) |> Repo.one
   
         on_exit( :user, fn ->
           :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
@@ -27,19 +28,44 @@ defmodule UpsilonGarden.Projection.ComputeTest do
         {:ok, garden: garden, user: user, plant: plant}
     end
 
-    @tag :not_implemented
-    test "when projection provides no data, recompute projection and try again" do 
-        flunk "not implemented"
+    test "when projection provides no data, recompute projection and try again", context do 
+        garden = Map.put(context.garden, :projection, %GardenProjection{plants: []})
+        {_,projection} = Garden.prepare_projection(garden)
+        assert length(projection.plants) == 1
     end
 
-    @tag :not_implemented
-    test "when projection is still empty does nothing beside updating garden" do 
-        flunk "not implemented"
+    test "when projection is still empty does nothing beside updating garden", context do 
+        # Rejection criterium are simples: 
+        # There must be plants in a garden to build a projection
+        # Plants must have available space. (>= 0.1)
+
+        [plant] = context.garden.plants
+        plant_content = Map.put(plant.content, :current_size, 299.99)
+        |> Map.put(:max_size, 300)
+        plant = Map.put(plant, :content, plant_content)
+
+
+        garden = Map.put(context.garden, :plants, [plant])
+        {_,projection} = Garden.prepare_projection(garden)
+
+        assert length(projection.plants) == 0
     end
 
-    @tag :not_implemented
-    test "compute plant new storage after a few minutes have lapsed." do 
-        flunk "not implemented"
+    test "compute plant new storage after a few minutes have lapsed.", context do 
+        # force last update of the garden to a minutes backward, which should proves sufficient to make at least 3 turns
+        from_date = Timex.shift(context.garden.updated_at, minutes: -1)
+        garden = Map.put(context.garden, :updated_at, from_date)
+
+        turns = UpsilonGarden.Tools.compute_elapsed_turns(from_date)
+        garden = Garden.compute_update(garden)
+
+        garden = Repo.preload(garden,:plants)
+
+        [plant] = garden.plants
+        [palts] = garden.projection.plants
+        total = Alteration.total(palts.alterations)
+
+        assert plant.content.current_size == turns * total 
     end
 
     @tag :not_implemented

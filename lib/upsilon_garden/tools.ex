@@ -55,6 +55,6 @@ defmodule UpsilonGarden.Tools do
         Compute number of turn elapsed between now and then ;)
     """
     def compute_elapsed_turns(from, to \\ DateTime.utc_now) do 
-        round(Float.floor(DateTime.diff(from,to) / @seconds_by_turn))
+        round(Float.floor(DateTime.diff(to,from) / @seconds_by_turn))
     end
 end
