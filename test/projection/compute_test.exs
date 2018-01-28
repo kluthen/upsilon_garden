@@ -2,7 +2,9 @@ defmodule UpsilonGarden.Projection.ComputeTest do
     use ExUnit.Case, async: false
     import Ecto.Query
     require Logger
-    alias UpsilonGarden.{User,Garden,Repo,PlantContext}
+    alias UpsilonGarden.{User,Garden,Repo,PlantContext,PlantContent}
+    alias UpsilonGarden.GardenData.Component
+    alias UpsilonGarden.GardenProjection.{Alteration}
 
     setup do
         # Allows Ecto to exists here:
@@ -44,6 +46,52 @@ defmodule UpsilonGarden.Projection.ComputeTest do
     test "a plant reaching its storage limits force a recompute of projection and a new projection plan is to be applied" do 
         flunk "not implemented"
     end
+
+    test "can apply an alteration for a few turns on content" do 
+        content = %PlantContent{
+            contents: [],
+            max_size: 1000,
+            current_size: 0
+        }
+
+        alteration = %Alteration{
+            component: "ABC",
+            rate: 10.0,
+            event_type: Alteration.absorption()
+        }
+
+        content = PlantContent.apply_alteration(content, alteration, 5, 1)
+
+        assert 50.0 = content.current_size
+        assert [%Component{
+            composition: "ABC",
+            quantity: 50.0
+        }] = content.contents
+    end
+
+    test "can apply alteration for one turn and apply a rate" do 
+        content = %PlantContent{
+            contents: [],
+            max_size: 1000,
+            current_size: 0
+        }
+
+        alteration = %Alteration{
+            component: "ABC",
+            rate: 10.0,
+            event_type: Alteration.absorption()
+        }
+
+        content = PlantContent.apply_alteration(content, alteration, 1, 0.5)
+
+        assert 5.0 = content.current_size
+        assert [%Component{
+            composition: "ABC",
+            quantity: 5.0
+        }] = content.contents
+    end
+
+
 
 
 

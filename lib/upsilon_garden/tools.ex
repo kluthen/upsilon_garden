@@ -14,6 +14,25 @@ defmodule UpsilonGarden.Tools do
         |> List.flatten
     end
 
+    @doc """
+        Provided available space, determine and a total added by turns,
+        determine how many turns are expected before being full.
+        returns 0 if available space < 0.1
+        returns 1 even if full before that
+        otherwise return a number of turns up that can fully absorb
+    """
+    def turns_to_full(current_size, max_size, total) do 
+        if total < 0.1 do 
+            0
+        else 
+            if max_size - current_size < 0.1 do 
+                0
+            else
+                max(round(Float.floor(((max_size - current_size)/1) / total)),1) 
+            end
+        end
+    end
+
     @seconds_by_turn 15
     @doc """
         Compute next date based on current time + provided number of turns.

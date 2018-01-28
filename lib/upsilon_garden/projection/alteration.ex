@@ -20,6 +20,21 @@ defmodule UpsilonGarden.GardenProjection.Alteration do
     end
 
     @doc """
+        Provided a list of part alterations, will sum those that share a same event_type.
+        If none exists, simply add it to the pack
+        returns [alteration]
+    """
+    def merge_part_alterations(part_alterations) do 
+        Enum.reduce(part_alterations, %{}, fn pa, acc -> 
+            Enum.reduce(pa.alterations, acc, fn alt, acc -> 
+                Map.update(acc, alt.component, [alt], fn old_alts -> 
+                    merge_alterations(old_alts, alt)
+                end)
+            end)
+        end)
+    end
+
+    @doc """
         Provided a list of alterations, will sum those that share a same event_type.
         If none exists, simply add it to the pack
         returns [alteration]
@@ -38,6 +53,23 @@ defmodule UpsilonGarden.GardenProjection.Alteration do
         else 
             alterations
         end
+    end
+
+    @doc """
+        Retrieve total absorbed rate (or whatever alteration type you want)
+    """
+    def total(alterations) do 
+        total(alterations, [Alteration.absorption()])
+    end
+    def total(alterations, types) do 
+        Enum.reduce(alterations, 0, fn alt, acc -> 
+            if alt.event_type in types do 
+                acc + alt.rate 
+            else 
+                acc
+            end
+        end)
+
     end
 
     def changeset(%Alteration{} = alteration, attrs \\ %{}) do 

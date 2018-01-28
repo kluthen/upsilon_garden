@@ -68,37 +68,23 @@ defmodule UpsilonGarden.GardenProjection do
         # We don't have access to plants here so, we can't compute end date.
         projection = Map.update(projection, :plants, [], fn plants_alterations -> 
             Enum.map(plants_alterations, fn plant ->
-                alterations = Enum.reduce(plant.alteration_by_parts, %{}, fn pa, acc -> 
-                    Enum.reduce(pa.alterations, acc, fn alt, acc -> 
-                        Map.update(acc, alt.component, [alt], fn old_alts -> 
-                            Alteration.merge_alterations(old_alts, alt)
-                        end)
-                    end)
-                end)
+                alterations = Alteration.merge_part_alterations(plant.alteration_by_parts)
                 |> Map.values
                 |> List.flatten
 
-                total = Enum.reduce(alterations, 0, fn alt, acc -> 
-                    if alt.event_type == Alteration.absorption() do 
-                        acc + alt.rate 
-                    else 
-                        acc
-                    end
-                end)
+                total = Alteration.total(alterations)
 
+                # well, if not found, we do have a big problem here ;)
                 plt = Enum.find(plants, nil, fn p ->
                     p.id == plant.plant_id 
                 end)
 
-                # well, if not found, we do have a big problem here ;)
-                if total > 0 do 
-                    turns_to_full = round(Float.floor(((plt.content.max_size - plt.content.current_size)/1) / total)) 
-                    turns_to_full = if turns_to_full > 0 do 
-                        turns_to_full 
-                    else
-                        1
-                    end
+                # ensure we've work to do.
+                turns_to_full = UpsilonGarden.Tools.turns_to_full(plt.content.current_size, plt.content.max_size, total)
+                if total > 0.1 and turns_to_full > 0 do 
                     next_event = UpsilonGarden.Tools.compute_next_date(turns_to_full)
+
+                    # Updated next event date for all needing alterations
                     alterations = Enum.map(alterations, fn alt -> 
                         if alt.event_type == Alteration.absorption() do 
                             Map.put(alt,:next_event, next_event)
