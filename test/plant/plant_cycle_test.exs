@@ -40,12 +40,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     test "upon reaching 0 structure points of a vital cycle destroy plant" do 
 
     end
-
-    @not_implemented
-    test "turn completion with threshold out of bounds triggers removal of structure points" do 
-
-    end
-
+    
     @not_implemented
     test "cycle completion updates most cycle attributes" do 
 
