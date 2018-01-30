@@ -71,14 +71,14 @@ defmodule UpsilonGarden.Garden do
 
     # Checks beforehand if there is a stone or a prime root here.
     bloc = GardenData.get_bloc(garden.data, segment,0)
-    
-    if bloc.type == Bloc.stone() do 
+
+    if bloc.type == Bloc.stone() do
       {:error, :stone}
-    else 
-      # checks for a prime root 
-      if Enum.find(bloc.influences, false, fn infl -> 
-        infl.prime_root == true 
-      end) != false do 
+    else
+      # checks for a prime root
+      if Enum.find(bloc.influences, false, fn infl ->
+        infl.prime_root == true
+      end) != false do
         {:error, :prime_root}
       else
         Repo.transaction( fn ->
@@ -107,7 +107,7 @@ defmodule UpsilonGarden.Garden do
           plant
         end)
       end
-    end    
+    end
   end
 
   def setup_plant(garden_data, [],_), do: garden_data
@@ -147,8 +147,8 @@ defmodule UpsilonGarden.Garden do
   @doc """
     Ensure projection can occurs
   """
-  def prepare_projection(garden) do 
-    garden = 
+  def prepare_projection(garden) do
+    garden =
     if not Ecto.assoc_loaded?(garden.plants) do
       garden
     else
@@ -156,7 +156,7 @@ defmodule UpsilonGarden.Garden do
     end
 
     projection =
-    if length(garden.projection.plants) == 0 do 
+    if length(garden.projection.plants) == 0 do
       GardenProjection.generate(garden)
     else
       garden.projection
@@ -167,38 +167,38 @@ defmodule UpsilonGarden.Garden do
 
   @doc """
     Compute all plants up to now. Use projections up to next event date or now
-    If next event date is reached, recompute new projection and so on. 
+    If next event date is reached, recompute new projection and so on.
     Updates garden and return it once updated. ( or not.)
   """
-  def compute_update(garden) do 
+  def compute_update(garden) do
     {garden, projection} = prepare_projection(garden)
 
-    if length(projection.plants) == 0 do 
+    if length(projection.plants) == 0 do
       # still nothing, well no updates :)
       garden
       |> change
       |> Repo.update!(returning: true)
-    else 
+    else
       previous_date = garden.updated_at
       apply_projection_for_timrange(garden, projection, previous_date, projection.next_event)
-    end 
+    end
   end
 
-  def apply_projection_for_timrange(garden, projection, previous_date, next_date) do 
-    if next_date != nil do  
-      if DateTime.diff(next_date, DateTime.utc_now) <= 0 do 
-        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date) 
+  def apply_projection_for_timrange(garden, projection, previous_date, next_date) do
+    if next_date != nil do
+      if DateTime.diff(next_date, DateTime.utc_now) <= 0 do
+        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date)
         garden = apply_projection_for_turns(garden,projection, turns)
         # Compute a new projection
         projection = GardenProjection.generate(garden)
-        
+
         # redo compute_udpate.
-        compute_update(garden, projection, next_date, projection.next_event)
+        apply_projection_for_timrange(garden, projection, next_date, projection.next_event)
       else
-        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now) 
-        garden = apply_projection_for_turns(garden,projection, turns) # No need to recompute a projection as it hasn't changed.
+        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now)
+        apply_projection_for_turns(garden,projection, turns) # No need to recompute a projection as it hasn't changed.
       end
-    else 
+    else
       # projection can't project.
       garden
     end
@@ -208,33 +208,33 @@ defmodule UpsilonGarden.Garden do
     Apply projection for given turns
     returns updated garden
   """
-  def apply_projection_for_turns(garden, projection, turns) when turns > 0 do 
+  def apply_projection_for_turns(garden, projection, turns) when turns > 0 do
       # Apply projection to all plants store.
-      updated_plants = Enum.map(garden.plants,  fn plant -> 
-        pa = Enum.find(projection.plants, nil, fn p -> 
+      updated_plants = Enum.map(garden.plants,  fn plant ->
+        pa = Enum.find(projection.plants, nil, fn p ->
           p.plant_id == plant.id
         end)
 
         total = Alteration.total(pa.alterations)
 
-        {rate, filled} = 
-        if plant.content.current_size + total > plant.content.max_size do 
+        {rate, filled} =
+        if plant.content.current_size + total > plant.content.max_size do
             {Float.round((plant.content.max_size - plant.content.current_size)/total,2), true}
-        else 
+        else
             {1.0, false}
         end
 
-        # We found appropriate plant alteration. now update its store. 
+        # We found appropriate plant alteration. now update its store.
 
 
         content = Enum.reduce(pa.alterations, plant.content, fn alteration, content ->
           PlantContent.apply_alteration(content, alteration, turns,rate)
         end)
 
-        content = 
-        if filled do 
+        content =
+        if filled do
           Map.put(content, :current_size, content.max_size)
-        else 
+        else
           content
           |> Map.put(:current_size, Float.round(content.current_size, 2))
         end
@@ -245,7 +245,7 @@ defmodule UpsilonGarden.Garden do
       Map.put(garden, :plants, updated_plants)
   end
 
-  def apply_projection_for_turns(garden, _projection, turns) when turns == 0 do 
+  def apply_projection_for_turns(garden, _projection, turns) when turns == 0 do
     garden
   end
 

@@ -60,6 +60,7 @@ defmodule UpsilonGarden.Repo.Migrations.InitialSetup do
       add :data, :map
       add :content, :map
       add :context, :map
+      add :cycle, :map
       add :segment, :integer
       add :celerity, :integer
       add :garden_id, references(:gardens, on_delete: :delete_all)
