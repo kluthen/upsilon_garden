@@ -32,6 +32,16 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     end
 
     @not_implemented
+    test "upon reaching 0 structure points of a non vital cycle restart cycle at level 0" do 
+
+    end
+    
+    @not_implemented
+    test "upon reaching 0 structure points of a vital cycle destroy plant" do 
+
+    end
+
+    @not_implemented
     test "turn completion with threshold out of bounds triggers removal of structure points" do 
 
     end
