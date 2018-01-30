@@ -3,13 +3,15 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     alias UpsilonGarden.PlantCycle
     alias UpsilonGarden.GardenProjection
     alias UpsilonGarden.GardenProjection.{Alteration,Plant}
+    alias UpsilonGarden.GardenProjection.{Alteration,Plant}
+    alias UpsilonGarden.GardenData.{Component}
 
     @not_implemented
     test "determine date of completion based on projection" do
       projection = %GardenProjection{
         plants: [
           %Plant{
-            plant_id: 0
+            plant_id: 0,
             alterations: [
               %Alteration{
                 component: "ABC",
@@ -24,7 +26,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       plant = %UpsilonGarden.Plant {
         id: 0,
         content: %UpsilonGarden.PlantContent {
-          components: [
+          contents: [
             %Component{
               composition: "AB",
               quantity: 20
@@ -32,7 +34,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           ],
           max_size: 1000,
           current_size: 0
-        }
+        },
         cycle: %PlantCycle {
           objectives: [
             %Component{
@@ -55,7 +57,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       plant = %UpsilonGarden.Plant {
         id: 0,
         content: %UpsilonGarden.PlantContent {
-          components: [
+            contents: [
             %Component{
               composition: "AB",
               quantity: 20
@@ -63,7 +65,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           ],
           max_size: 1000,
           current_size: 0
-        }
+        },
         cycle: %PlantCycle {
           part: "roots"
         }

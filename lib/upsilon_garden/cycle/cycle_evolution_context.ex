@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Cycle.CycleContext do
+defmodule UpsilonGarden.Cycle.CycleEvolutionContext do
   use Ecto.Schema
   import Ecto.Changeset
   alias UpsilonGarden.Cycle.CycleContext
