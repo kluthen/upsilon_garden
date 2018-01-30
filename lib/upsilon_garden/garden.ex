@@ -180,15 +180,15 @@ defmodule UpsilonGarden.Garden do
       |> Repo.update!(returning: true)
     else 
       previous_date = garden.updated_at
-      compute_update(garden, projection, previous_date, projection.next_event)
+      apply_projection_for_timrange(garden, projection, previous_date, projection.next_event)
     end 
   end
 
-  def compute_update(garden, projection, previous_date, next_date) do 
+  def apply_projection_for_timrange(garden, projection, previous_date, next_date) do 
     if next_date != nil do  
       if DateTime.diff(next_date, DateTime.utc_now) <= 0 do 
         turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date) 
-        garden = compute_update(garden,projection, turns)
+        garden = apply_projection_for_turns(garden,projection, turns)
         # Compute a new projection
         projection = GardenProjection.generate(garden)
         
@@ -196,7 +196,7 @@ defmodule UpsilonGarden.Garden do
         compute_update(garden, projection, next_date, projection.next_event)
       else
         turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now) 
-        garden = compute_update(garden,projection, turns) # No need to recompute a projection as it hasn't changed.
+        garden = apply_projection_for_turns(garden,projection, turns) # No need to recompute a projection as it hasn't changed.
       end
     else 
       # projection can't project.
@@ -204,7 +204,11 @@ defmodule UpsilonGarden.Garden do
     end
   end
 
-  def compute_update(garden, projection, turns) when turns > 0 do 
+  @doc """
+    Apply projection for given turns
+    returns updated garden
+  """
+  def apply_projection_for_turns(garden, projection, turns) when turns > 0 do 
       # Apply projection to all plants store.
       updated_plants = Enum.map(garden.plants,  fn plant -> 
         pa = Enum.find(projection.plants, nil, fn p -> 
@@ -241,7 +245,7 @@ defmodule UpsilonGarden.Garden do
       Map.put(garden, :plants, updated_plants)
   end
 
-  def compute_update(garden, _projection, turns) when turns == 0 do 
+  def apply_projection_for_turns(garden, _projection, turns) when turns == 0 do 
     garden
   end
 
