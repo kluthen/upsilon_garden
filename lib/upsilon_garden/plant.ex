@@ -12,6 +12,7 @@ defmodule UpsilonGarden.Plant do
     embeds_one :content, PlantContent, on_replace: :delete
     embeds_one :context, PlantContext, on_replace: :delete
     embeds_one :data, PlantData, on_replace: :delete
+    embeds_one :cycle, PlantCycle, on_replace: :delete
 
     belongs_to :garden, Garden
 
