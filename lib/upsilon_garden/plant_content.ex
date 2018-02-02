@@ -55,6 +55,20 @@ defmodule UpsilonGarden.PlantContent do
         end
     end
 
+    @doc """
+        Find components in store matching request
+        returns [component]
+    """
+    def find_content_matching(content, target) do 
+        Enum.reduce(content.contents, [], fn %Component{composition: comp} = cmp, result -> 
+            if String.starts_with?(comp,target) do 
+                [cmp|result]
+            else
+                result
+            end
+        end)
+    end
+
     def changeset(%PlantContent{} = root, attrs \\ %{}) do 
         root
         |> cast(attrs, [])

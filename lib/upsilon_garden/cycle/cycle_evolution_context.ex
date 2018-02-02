@@ -11,6 +11,8 @@ defmodule UpsilonGarden.Cycle.CycleEvolutionContext do
 
     field :objectives_range, {:array, :string}
     field :objectives_count_range, {:array, :integer}
+    field :objectives_multiplier_range, {:array, :float}
+    field :objectives_gain_range, {:array, :float}
 
     field :structure_gain_range, {:array, :float}
     field :storage_gain_range, {:array, :float}

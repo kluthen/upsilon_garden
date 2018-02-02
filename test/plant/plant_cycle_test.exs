@@ -6,7 +6,6 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     alias UpsilonGarden.GardenProjection.{Alteration,Plant}
     alias UpsilonGarden.GardenData.{Component}
 
-    @not_implemented
     test "determine date of completion based on projection" do
       projection = %GardenProjection{
         plants: [
@@ -36,6 +35,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           current_size: 0
         },
         cycle: %PlantCycle {
+          part: "roots",
           objectives: [
             %Component{
               composition: "AB",
@@ -48,6 +48,50 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       turn = PlantCycle.compute_next_event_turns(plant, projection)
 
       assert turn == 1
+    end
+
+    test "when a projection can't determine end date, it should return unable" do
+      projection = %GardenProjection{
+        plants: [
+          %Plant{
+            plant_id: 0,
+            alterations: [
+              %Alteration{
+                component: "ABC",
+                rate: 100.0,
+                event_type: Alteration.absorption()
+              }
+            ]
+          }
+        ]
+      }
+
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            %Component{
+              composition: "AB",
+              quantity: 20
+            }
+          ],
+          max_size: 1000,
+          current_size: 0
+        },
+        cycle: %PlantCycle {
+          part: "roots",
+          objectives: [
+            %Component{
+              composition: "RT",
+              quantity: 100
+            }
+          ]
+        }
+      }
+
+      turn = PlantCycle.compute_next_event_turns(plant, projection)
+
+      assert turn == :unable
     end
 
     @not_implemented
@@ -76,11 +120,6 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
 
     @not_implemented
     test "in case of tie for a cycle to be completed, deepest first mode" do
-
-    end
-
-    @not_implemented
-    test "in case of tie for a cycle to be completed, first mode" do
 
     end
 

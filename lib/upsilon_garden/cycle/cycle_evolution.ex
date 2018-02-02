@@ -8,6 +8,7 @@ defmodule UpsilonGarden.Cycle.CycleEvolution do
   embedded_schema do
     embeds_many :dependents, PlantCycle
 
+    embeds_many :objectives, Component
     field :pivot, :integer
     field :structure_gain, :float
     field :storage_gain, :float

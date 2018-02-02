@@ -72,6 +72,21 @@ defmodule UpsilonGarden.GardenProjection.Alteration do
 
     end
 
+    
+    @doc """
+        Find alterations in store matching request
+        returns [component]
+    """
+    def find_content_matching(alterations, target) do 
+        Enum.reduce(alterations, [], fn %Alteration{component: comp} = cmp, result -> 
+            if String.starts_with?(comp,target) do 
+                [cmp|result]
+            else
+                result
+            end
+        end)
+    end
+
     def changeset(%Alteration{} = alteration, attrs \\ %{}) do 
         alteration
         |> cast(attrs, [:component, :current_value, :rate, :next_event, :event_type, :event_type_id])
