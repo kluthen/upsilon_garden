@@ -13,7 +13,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
 
     test "determine date of completion based on projection" do
       projection = 
-          %Plant{
+          %GardenProjection.Plant{
             plant_id: 0,
             alterations: [
               %Alteration{
@@ -38,7 +38,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         },
         cycle: %PlantCycle {
           level: 10,
-          part: "roots",
+          part: :roots,
           evolutions: [
             %CycleEvolution{ 
               pivot: 0,
@@ -53,9 +53,138 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         }
       }
 
-      turn = PlantCycle.compute_next_event_turns(plant, projection)
+      cycle = [
+        %PlantCycle {
+          level: 10,
+          part: :roots,
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives: [
+                %Component{
+                  composition: "AB",
+                  quantity: 100
+                }
+              ]
+            }
+          ]
+        }
+      ]
 
-      assert turn == 1
+      assert [{:roots,1,0}] == PlantCycle.compute_next_event_by_cycle(plant, cycle, projection, [], 0)
+    end
+
+
+    test "seeks only accessible dependencies" do 
+      cycle = 
+      %PlantCycle{
+        part: :roots,
+        level: 10,
+        evolutions: [
+          %CycleEvolution{ 
+            pivot: 5,
+            dependents: [
+              %PlantCycle{ 
+                part: :leaves,
+                level: 5,
+                evolutions: [ 
+                  %CycleEvolution{ 
+                    pivot: 15,
+                    dependents: [
+                      %PlantCycle{
+                        part: :berries,
+                        level: 0,
+                        evolutions: [
+                          %CycleEvolution{
+                            pivot: 6
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }, 
+          
+          %CycleEvolution{ 
+            pivot: 15,
+            dependents: [
+              %PlantCycle{ 
+                part: :flower,
+                level: 0,
+                evolutions: [ 
+                  %CycleEvolution{ 
+                    pivot: 15,
+                    dependents: [
+                      %PlantCycle{
+                        part: :fruit,
+                        level: 0,
+                        evolutions: [
+                          %CycleEvolution{
+                            pivot: 6
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+
+      assert [
+        %PlantCycle{part: :leaves}
+      ] = PlantCycle.dependents(cycle)
+    end
+
+    test "seeks only accessible objectives" do 
+      cycle = %PlantCycle {
+        level: 10,
+        part: :roots,
+        evolutions: [
+          %CycleEvolution{ 
+            pivot: 0,
+            objectives: [
+              %Component{
+                composition: "AB",
+                quantity: 100
+              }
+            ]
+          }, 
+          %CycleEvolution{ 
+            pivot: 2,
+            objectives: [
+              %Component{
+                composition: "CD",
+                quantity: 100
+              }
+            ]
+          },
+          %CycleEvolution{ 
+            pivot: 15,
+            objectives: [
+              %Component{
+                composition: "ZE",
+                quantity: 100
+              }
+            ]
+          }
+        ]
+      }
+
+      assert [
+        %Component{
+          composition: "AB",
+          quantity: 100
+        },
+        %Component{
+          composition: "CD",
+          quantity: 100
+        }
+      ] = PlantCycle.objectives(cycle)
     end
 
     test "when a projection can't determine end date, it should return unable" do
@@ -86,7 +215,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         },
         cycle: %PlantCycle {
           level: 10,
-          part: "roots",
+          part: :roots,
           evolutions: [
             %CycleEvolution{ 
               pivot: 0,
@@ -105,6 +234,105 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       assert turn == :unable
     end
 
+    test "based on plant content, can find appropriate items for cycle evolution" do 
+      content =  %UpsilonGarden.PlantContent {
+        contents: [
+          %Component{
+            composition: "AB",
+            quantity: 20
+          },%Component{
+            composition: "CD",
+            quantity: 20
+          },
+        ],
+        max_size: 1000,
+        current_size: 40
+      }
+
+      assert [%Component{
+        composition: "AB",
+        quantity: 20
+      }] = UpsilonGarden.PlantContent.find_content_matching(content, "A")
+    end
+
+    
+
+    test "based on projection, can find appropriate items for cycle evolution" do 
+      alterations =  [ 
+        %Alteration{
+          component: "ABC", 
+          rate: 10.0,
+          event_type: Alteration.absorption
+        } , 
+        %Alteration{
+          component: "ABD", 
+          rate: 10.0,
+          event_type: Alteration.absorption
+        }, 
+        %Alteration{
+          component: "EDT", 
+          rate: 10.0,
+          event_type: Alteration.absorption
+        }
+      ]
+
+      assert [%Alteration{
+        component: "ABD",
+        rate: 10.0
+      },%Alteration{
+        component: "ABC",
+        rate: 10.0
+      }] = Alteration.find_alterations_matching(alterations, "A")
+    end
+
+    test "ensure that objective get correctly summed up" do 
+      alterations =  [ 
+        %Alteration{
+          component: "ABC", 
+          rate: 100.0,
+          event_type: Alteration.absorption
+        } , 
+        %Alteration{
+          component: "ABD", 
+          rate: 10.0,
+          event_type: Alteration.absorption
+        }, 
+        %Alteration{
+          component: "EDT", 
+          rate: 10.0,
+          event_type: Alteration.absorption
+        }
+      ]
+
+      content =  %UpsilonGarden.PlantContent {
+        contents: [
+          %Component{
+            composition: "AB",
+            quantity: 20.0
+          },%Component{
+            composition: "CD",
+            quantity: 20.0
+          },
+        ],
+        max_size: 1000.0,
+        current_size: 40.0
+      }
+
+      objective = %Component{
+        composition: "A",
+        quantity: 100
+      }
+
+      assert %{
+        composition: "A",
+        target: 100, 
+        store: 20.0,
+        income: 110.0,
+        'completable?': true,
+        completion: 1,
+      } = PlantCycle.make_summary(objective, content, alterations)
+    end
+
     @tag not_implemented: true
     test "determine ability to complete a cycle" do
       plant = %UpsilonGarden.Plant {
@@ -117,10 +345,10 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
             }
           ],
           max_size: 1000,
-          current_size: 0
+          current_size: 20
         },
         cycle: %PlantCycle {
-          part: "roots"
+          part: :roots
         }
       }
 

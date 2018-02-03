@@ -35,6 +35,8 @@ defmodule UpsilonGarden.PlantCycle do
         :unable
       [{_,turns,_}|_] ->
         turns
+      _ -> 
+        :unable
     end
   end
 
@@ -77,30 +79,7 @@ defmodule UpsilonGarden.PlantCycle do
     # map objectives to available store and projection alterations. 
     # compute end date. if able.
     target = Enum.reduce(objectives(cycle), %{}, fn obj, results ->
-      res = %{
-        composition: obj.composition,
-        target: obj.quantity, 
-        store: Enum.reduce(PlantContent.find_content_matching(plant.content,obj.composition), 0, &(&1.quantity + &2)),
-        income: Enum.reduce(Alteration.find_alterations_matching(projection.alterations, obj.composition), 0, &(&1.rate + &2)),
-        'completable?': false,
-        completion: 0,
-      }
-
-      res = 
-      if res.store > res.target do 
-        res 
-        |> Map.put(:'completable?', true)
-        |> Map.put(:completion, 0)
-      else 
-        if res.income > 0 do 
-          res
-          |> Map.put(:'completable?', true)
-          |> Map.put(:completion, Float.ceil((res.target - res.store) / res.income))
-        else
-          res
-        end
-      end
-
+      res = make_summary(obj,plant.content,projection.alterations)
       Map.put(results, res.composition, res)
     end)   
 
@@ -123,7 +102,37 @@ defmodule UpsilonGarden.PlantCycle do
   end
 
   @doc """
+    prepare summary of a given objective
+    returns a nice map.
+  """
+  def make_summary(objective, content, alterations) do 
+    res =%{
+      composition: objective.composition,
+      target: objective.quantity, 
+      store: Enum.reduce(PlantContent.find_content_matching(content,objective.composition), 0, &(&1.quantity + &2)),
+      income: Enum.reduce(Alteration.find_alterations_matching(alterations, objective.composition), 0, &(&1.rate + &2)),
+      'completable?': false,
+      completion: 0,
+    }
+
+    if res.store > res.target do 
+      res 
+      |> Map.put(:'completable?', true)
+      |> Map.put(:completion, 0)
+    else 
+      if res.income > 0 do 
+        res
+        |> Map.put(:'completable?', true)
+        |> Map.put(:completion, round(Float.ceil((res.target - res.store) / res.income)))
+      else
+        res
+      end
+    end
+  end
+
+  @doc """
     fetch all sub cycles depending on current cycle level. 
+    returns [plantcycles]
   """
   def dependents(cycle) do 
     Enum.reduce(cycle.evolutions, [], fn evol, res ->
@@ -136,7 +145,7 @@ defmodule UpsilonGarden.PlantCycle do
   end
 
   @doc """
-    sums objectives 
+    sums objectives based on cycle level
     returns [component]  
   """
   def objectives(cycle) do 
