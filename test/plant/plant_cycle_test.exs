@@ -1,14 +1,18 @@
 defmodule UpsilonGarden.Plant.PlantCycleTest do
-    use ExUnit.Case, async: true
-    alias UpsilonGarden.PlantCycle
+    use ExUnit.Case, async: false
+    alias UpsilonGarden.{Repo,PlantCycle}
+    alias UpsilonGarden.Cycle.CycleEvolution
     alias UpsilonGarden.GardenProjection
     alias UpsilonGarden.GardenProjection.{Alteration,Plant}
-    alias UpsilonGarden.GardenProjection.{Alteration,Plant}
     alias UpsilonGarden.GardenData.{Component}
+    
+    setup_all do
+      # Allows Ecto to exists here:
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+    end
 
     test "determine date of completion based on projection" do
-      projection = %GardenProjection{
-        plants: [
+      projection = 
           %Plant{
             plant_id: 0,
             alterations: [
@@ -19,8 +23,6 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
               }
             ]
           }
-        ]
-      }
 
       plant = %UpsilonGarden.Plant {
         id: 0,
@@ -35,11 +37,17 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           current_size: 0
         },
         cycle: %PlantCycle {
+          level: 10,
           part: "roots",
-          objectives: [
-            %Component{
-              composition: "AB",
-              quantity: 100
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives: [
+                %Component{
+                  composition: "AB",
+                  quantity: 100
+                }
+              ]
             }
           ]
         }
@@ -51,8 +59,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     end
 
     test "when a projection can't determine end date, it should return unable" do
-      projection = %GardenProjection{
-        plants: [
+      projection =
           %Plant{
             plant_id: 0,
             alterations: [
@@ -63,8 +70,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
               }
             ]
           }
-        ]
-      }
+
 
       plant = %UpsilonGarden.Plant {
         id: 0,
@@ -79,25 +85,28 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           current_size: 0
         },
         cycle: %PlantCycle {
+          level: 10,
           part: "roots",
-          objectives: [
-            %Component{
-              composition: "RT",
-              quantity: 100
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives: [
+                %Component{
+                  composition: "RT",
+                  quantity: 100
+                }
+              ]
             }
           ]
         }
       }
-
       turn = PlantCycle.compute_next_event_turns(plant, projection)
 
       assert turn == :unable
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "determine ability to complete a cycle" do
-
-
       plant = %UpsilonGarden.Plant {
         id: 0,
         content: %UpsilonGarden.PlantContent {
@@ -115,50 +124,50 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         }
       }
 
-      assert ["roots"] = PlantCycle.can_complete_cycle?(plant, projection)
+
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "in case of tie for a cycle to be completed, deepest first mode" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "cycle completion triggers regeneration of structure" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "cycle not completed in time triggers removal of structure points" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "upon reaching 0 structure points of a non vital cycle restart cycle at level 0" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "upon reaching 0 structure points of a vital cycle destroy plant" do
 
     end
     
-    @not_implemented
+    @tag not_implemented: true
     test "cycle completion updates most cycle attributes" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "cycle completion triggers a pivot" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "cycle completion triggers appearance of new cycles" do
 
     end
 
-    @not_implemented
+    @tag not_implemented: true
     test "cycle completion depletes plants stores" do
 
     end

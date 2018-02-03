@@ -1,8 +1,9 @@
 defmodule UpsilonGarden.PlantCycle do
   use Ecto.Schema
   import Ecto.Changeset
-  alias UpsilonGarden.PlantCycle
+  alias UpsilonGarden.{PlantCycle,PlantContent}
   alias UpsilonGarden.Cycle.{CycleContext,CycleEvolution}
+  alias UpsilonGarden.GardenProjection.{Alteration}
   alias UpsilonGarden.GardenData.Component
   require Logger
 
@@ -80,7 +81,7 @@ defmodule UpsilonGarden.PlantCycle do
         composition: obj.composition,
         target: obj.quantity, 
         store: Enum.reduce(PlantContent.find_content_matching(plant.content,obj.composition), 0, &(&1.quantity + &2)),
-        income: Enum.reduce(Alteration.find_alterations_matching(projection.alterations, obj.composition), 0, &(&1.rate + &2))
+        income: Enum.reduce(Alteration.find_alterations_matching(projection.alterations, obj.composition), 0, &(&1.rate + &2)),
         'completable?': false,
         completion: 0,
       }
@@ -106,8 +107,8 @@ defmodule UpsilonGarden.PlantCycle do
     completable = Enum.reduce(target, 0, fn %{'completable?': false}, _completable -> :unable
                                               _ , :unable -> :unable
                                               %{completion: x}, turns when x > turns -> x
-                                              %{completion: x}, turns -> turns
-                                              _ -> :unable
+                                              %{completion: _x}, turns -> turns
+                                              _ , _ -> :unable
     end)
 
     results = 

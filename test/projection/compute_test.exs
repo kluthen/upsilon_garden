@@ -77,7 +77,7 @@ defmodule UpsilonGarden.Projection.ComputeTest do
         # force last update of the garden to a minutes backward, which should proves sufficient to make at least 3 turns
         from_date = Timex.shift(DateTime.utc_now, minutes: -1)
         {garden,projection} = Garden.prepare_projection(context.garden)
-        projection = Map.put(projection, :next_event, Timex.shift(DateTime.utc_now, second: -30))
+        projection = Map.put(projection, :next_event, Timex.shift(DateTime.utc_now, seconds: -30))
         garden = Map.put(garden, :updated_at, from_date)
         |> Map.put(:projection, projection)
 

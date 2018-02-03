@@ -77,7 +77,7 @@ defmodule UpsilonGarden.GardenProjection.Alteration do
         Find alterations in store matching request
         returns [component]
     """
-    def find_content_matching(alterations, target) do 
+    def find_alterations_matching(alterations, target) do 
         Enum.reduce(alterations, [], fn %Alteration{component: comp} = cmp, result -> 
             if String.starts_with?(comp,target) do 
                 [cmp|result]
