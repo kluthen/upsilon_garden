@@ -14,12 +14,17 @@ defmodule UpsilonGarden.PlantContent do
         field :current_size, :float
     end
 
-    def build(_plant_ctx) do 
-        %PlantContent{
+    def build_content(opts \\ []) do 
+        content = %PlantContent{
             contents: [],
             max_size: 1000,
             current_size: 0,
         }
+        |> Map.merge(Enum.into(opts, %{}))
+        
+        Enum.reduce(content.contents, content, fn comp, content -> 
+           Map.put(content, :current_size, content.current_size + comp.quantity + comp.used) 
+        end)
     end
 
     def apply_alteration(content, alteration, 1, rate) do 

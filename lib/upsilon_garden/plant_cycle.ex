@@ -8,7 +8,7 @@ defmodule UpsilonGarden.PlantCycle do
 
   embedded_schema do
       field :part, :string
-      field :level, :integer, default: 0
+      field :level, :integer, default: 1
       field :storage, :float, default: 0.0
       field :structure_max, :float, default: 0.0
       field :structure_current, :float, default: 0.0
@@ -19,6 +19,32 @@ defmodule UpsilonGarden.PlantCycle do
       embeds_many :objectives, Component
       embeds_one :context, CycleContext
       embeds_many :evolutions, CycleEvolution
+  end
+
+  def build_cycle(opts \\ []) do 
+    cycle = %PlantCycle{
+      part: :roots,
+      level: 1,
+      storage: 0.0,
+      structure_max: 0.0, 
+      structure_current: 0.0,
+      vital: false,
+      death: -1,
+      objectives: [],
+      context: CycleContext.build_context(),
+      evolutions: [CycleEvolution.build_evolution()]
+    }
+    |> Map.merge(Enum.into(opts, %{}))
+
+    if length(cycle.evolutions) do 
+      Enum.reduce(cycle.evolutions, cycle, fn evol, cycle ->
+        if evol.pivot < cycle.level do 
+          Map.put(cycle, :objectives, evol.objectives ++ cycle.objectives)
+        else 
+          cycle
+        end
+      end)
+    end
   end
 
   @doc """

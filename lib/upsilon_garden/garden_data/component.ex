@@ -10,6 +10,16 @@ defmodule UpsilonGarden.GardenData.Component do
         field :used, :float, default: 0.0
     end
 
+    
+  def build_component(opts \\ []) do 
+    %Component{
+        composition: "",
+        quantity: 0.0,
+        used: 0.0
+    }
+    |> Map.merge(Enum.into(opts, %{}))
+  end
+
     @doc """
         Weight of a composition is the sum of all letters, where A is weigthed as 1 and Z 26 
     """

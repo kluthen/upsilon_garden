@@ -11,11 +11,12 @@ defmodule UpsilonGarden.GardenProjection do
         embeds_many :plants, Plant
     end
 
-    def build do 
+    def build(opts \\ []) do 
         %GardenProjection{
             next_event: nil,
             plants: []
         }
+        |> Map.merge(Enum.into(opts, %{}))
     end
 
     @doc """

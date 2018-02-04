@@ -27,26 +27,8 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
 
       plant = %UpsilonGarden.Plant {
         id: 0,
-        content: %UpsilonGarden.PlantContent {
-          contents: [
-            %Component{
-              composition: "AB",
-              quantity: 20
-            }
-          ],
-          max_size: 1000,
-          current_size: 20
-        },
-        cycle: %PlantCycle {
-          level: 1,
-          part: :roots,
-          objectives: [
-            %Component{
-              composition: "AB",
-              quantity: 100
-            }
-          ]
-        }
+        content: PlantContent.build_content(max_size: 1000.0, contents: [Component.build_component(composition: "AB", quantity: 20.0)]),
+        cycle: PlantCycle.build_cycle(level: 1, part: :roots, objectives: [Component.build_component(composition: "AB", quantity: 100.0)]) 
       }
 
       res = PlantCycle.compute_next_event_by_cycle(plant, [plant.cycle], projection, [], 0)

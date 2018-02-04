@@ -33,7 +33,7 @@ defmodule UpsilonGarden.Plant do
     |> changeset(%{segment: segment, name: "My Plant"})
     |> put_embed(:context, plant_ctx)
     |> put_embed(:data, PlantData.build())
-    |> put_embed(:content, PlantContent.build(plant_ctx))
+    |> put_embed(:content, PlantContent.build_content())
     |> Repo.insert!(returning: true)
 
     # Based on seed, create an actual root network, and setup objectives for next stage.
