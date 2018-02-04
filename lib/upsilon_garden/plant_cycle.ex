@@ -38,7 +38,7 @@ defmodule UpsilonGarden.PlantCycle do
 
     if length(cycle.evolutions) do 
       Enum.reduce(cycle.evolutions, cycle, fn evol, cycle ->
-        if evol.pivot < cycle.level do 
+        if evol.pivot <= cycle.level do 
           Map.put(cycle, :objectives, evol.objectives ++ cycle.objectives)
         else 
           cycle
@@ -299,7 +299,7 @@ defmodule UpsilonGarden.PlantCycle do
       # Seek last-valid cycle ( it's the only one that matters in term of gains)
 
       evolution = Enum.reduce(cycle.evolutions, %CycleEvolution{pivot: -1}, fn evol, current -> 
-        if evol.pivot < cycle.level and evol.pivot > current.pivot do 
+        if evol.pivot <= cycle.level and evol.pivot > current.pivot do 
           evol
         else 
           current
@@ -316,7 +316,7 @@ defmodule UpsilonGarden.PlantCycle do
       
       # has upgrade appointed a new evolution ?
       nevolution = Enum.reduce(cycle.evolutions, %CycleEvolution{pivot: - 1}, fn evol, current -> 
-        if evol.pivot < cycle.level and evol.pivot > current.pivot do 
+        if evol.pivot <= cycle.level and evol.pivot > current.pivot do 
           evol
         else 
           current
@@ -340,7 +340,7 @@ defmodule UpsilonGarden.PlantCycle do
     else
       {evolutions, {plant, done}} = Enum.map_reduce(cycle.evolutions, {plant, false}, 
         fn evol, {plant, false} ->
-          if evol.pivot < cycle.level do 
+          if evol.pivot <= cycle.level do 
             {deps, {plant, done}} = Enum.map_reduce(evol.dependents, {plant, false}, 
               fn sub_cycle , {plant, false} -> 
                   upgrade(plant, sub_cycle, cycle_name)

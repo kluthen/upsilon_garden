@@ -658,11 +658,200 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       
     end
     
-    @tag not_implemented: true
     test "cycle completion triggers regeneration of structure" do
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            %Component{
+              composition: "AB",
+              quantity: 200.0,
+              used: 0.0
+            }
+          ],
+          max_size: 1000.0,
+          current_size: 200.0
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          storage: 100,
+          structure_current: 50,
+          structure_max: 100,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 100.0
+            }
+          ], 
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives_gain: 1,
+              storage_gain: 1,
+              success_impact_gain: 20,
+              structure_gain: 1
+            }
+          ]
+        }
+      }
+
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+
+      component = PlantContent.find(plant.content,"AB")
+
+      assert %Component{
+        used: 100.0,
+        quantity: 100.0
+      } = component
+
+      assert %PlantCycle{
+        level: 11,
+        part: :roots,
+        storage: 101,
+        structure_current: 71,
+        structure_max: 101,
+        objectives: [
+          %Component{
+            composition: "AB",
+            quantity: 101.0
+          }
+        ]
+      } = plant.cycle
+    end
+
+    
+    test "cycle completion triggers a pivot" do
+
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            Component.build_component(composition: "AB", quantity: 500.0),
+            Component.build_component(composition: "CD", quantity: 500.0)
+          ],
+          max_size: 1000.0,
+          current_size: 400.0
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          storage: 100,
+          structure_current: 50,
+          structure_max: 100,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 100.0
+            }
+          ], 
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives_gain: 0,
+              storage_gain: 1,
+              success_impact_gain: 20,
+              structure_gain: 1
+            }, 
+            %CycleEvolution{ 
+              pivot: 11,
+              objectives_gain: 0,
+              storage_gain: 1,
+              success_impact_gain: 20,
+              structure_gain: 1, 
+              objectives: [
+                Component.build_component(composition: "CD", quantity: 100.0)
+              ]
+            }
+          ]
+        }
+      }
+
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+      
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+
+      component = PlantContent.find(plant.content,"AB")
+
+      assert %Component{
+        used: 200.0,
+        quantity: 300.0
+      } = component
+
+      component = PlantContent.find(plant.content,"CD")
+
+      assert %Component{
+        used: 100.0,
+        quantity: 400.0
+      } = component
 
     end
 
+    test "cycle completion triggers appearance of new cycles" do
+
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            Component.build_component(composition: "AB", quantity: 500.0),
+            Component.build_component(composition: "CD", quantity: 500.0)
+          ],
+          max_size: 1000.0,
+          current_size: 400.0
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          storage: 100,
+          structure_current: 50,
+          structure_max: 100,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 100.0
+            }
+          ], 
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives_gain: 0,
+              storage_gain: 1,
+              success_impact_gain: 20,
+              structure_gain: 1,
+              dependents: [
+                %PlantCycle{
+                  level: 0,
+                  part: :leaves,
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      objectives: [
+                        %Component{
+                          composition: "CD",
+                          quantity: 50.0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+      
+      cycle = PlantCycle.completable(plant)
+      assert [%PlantCycle{part: :leaves}] = cycle
+    end
+
+    
     @tag not_implemented: true
     test "cycle not completed in time triggers removal of structure points" do
 
@@ -675,16 +864,6 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
 
     @tag not_implemented: true
     test "upon reaching 0 structure points of a vital cycle destroy plant" do
-
-    end
-    
-    @tag not_implemented: true
-    test "cycle completion triggers a pivot" do
-
-    end
-
-    @tag not_implemented: true
-    test "cycle completion triggers appearance of new cycles" do
 
     end
 
