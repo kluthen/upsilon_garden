@@ -12,7 +12,7 @@ defmodule UpsilonGarden.Cycle.CycleContext do
     field :base_structure_range, {:array, :float}
     field :base_failure_impact_range, {:array, :float}
     field :base_success_impact_range, {:array, :float}
-    field :vital, :boolean
+    field :vital, :boolean, default: false
     field :death, {:array, :integer}
   end
 

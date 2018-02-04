@@ -69,6 +69,30 @@ defmodule UpsilonGarden.PlantContent do
         end)
     end
 
+    @doc """
+        Find exact component
+        returns component or {:error, :not_found}
+    """
+    def find(content, target) do 
+        Enum.find(content.contents, {:error, :not_found}, fn %Component{composition: comp} -> 
+            comp == target
+        end)
+    end
+
+    @doc """ 
+        Update content to use target component
+    """
+    def use(content, target, nb) do 
+        contents = Enum.map(content.contents, fn compo -> 
+            if compo.composition == target do 
+                Component.use(compo, nb)
+            else
+                compo
+            end
+        end)
+        Map.put(content, :contents, contents)
+    end
+
     def changeset(%PlantContent{} = root, attrs \\ %{}) do 
         root
         |> cast(attrs, [])

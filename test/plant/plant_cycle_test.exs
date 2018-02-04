@@ -1,6 +1,7 @@
 defmodule UpsilonGarden.Plant.PlantCycleTest do
     use ExUnit.Case, async: false
-    alias UpsilonGarden.{Repo,PlantCycle}
+    require Logger
+    alias UpsilonGarden.{Repo,PlantCycle,PlantContent}
     alias UpsilonGarden.Cycle.CycleEvolution
     alias UpsilonGarden.GardenProjection
     alias UpsilonGarden.GardenProjection.{Alteration,Plant}
@@ -34,44 +35,22 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
             }
           ],
           max_size: 1000,
-          current_size: 0
+          current_size: 20
         },
         cycle: %PlantCycle {
-          level: 10,
+          level: 1,
           part: :roots,
-          evolutions: [
-            %CycleEvolution{ 
-              pivot: 0,
-              objectives: [
-                %Component{
-                  composition: "AB",
-                  quantity: 100
-                }
-              ]
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 100
             }
           ]
         }
       }
 
-      cycle = [
-        %PlantCycle {
-          level: 10,
-          part: :roots,
-          evolutions: [
-            %CycleEvolution{ 
-              pivot: 0,
-              objectives: [
-                %Component{
-                  composition: "AB",
-                  quantity: 100
-                }
-              ]
-            }
-          ]
-        }
-      ]
-
-      assert [{:roots,1,0}] == PlantCycle.compute_next_event_by_cycle(plant, cycle, projection, [], 0)
+      res = PlantCycle.compute_next_event_by_cycle(plant, [plant.cycle], projection, [], 0)
+      assert [{:roots,1,0}] == res
     end
 
 
@@ -140,53 +119,6 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       ] = PlantCycle.dependents(cycle)
     end
 
-    test "seeks only accessible objectives" do 
-      cycle = %PlantCycle {
-        level: 10,
-        part: :roots,
-        evolutions: [
-          %CycleEvolution{ 
-            pivot: 0,
-            objectives: [
-              %Component{
-                composition: "AB",
-                quantity: 100
-              }
-            ]
-          }, 
-          %CycleEvolution{ 
-            pivot: 2,
-            objectives: [
-              %Component{
-                composition: "CD",
-                quantity: 100
-              }
-            ]
-          },
-          %CycleEvolution{ 
-            pivot: 15,
-            objectives: [
-              %Component{
-                composition: "ZE",
-                quantity: 100
-              }
-            ]
-          }
-        ]
-      }
-
-      assert [
-        %Component{
-          composition: "AB",
-          quantity: 100
-        },
-        %Component{
-          composition: "CD",
-          quantity: 100
-        }
-      ] = PlantCycle.objectives(cycle)
-    end
-
     test "when a projection can't determine end date, it should return unable" do
       projection =
           %Plant{
@@ -216,19 +148,15 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         cycle: %PlantCycle {
           level: 10,
           part: :roots,
-          evolutions: [
-            %CycleEvolution{ 
-              pivot: 0,
-              objectives: [
-                %Component{
-                  composition: "RT",
-                  quantity: 100
-                }
-              ]
+          objectives: [
+            %Component{
+              composition: "RT",
+              quantity: 100
             }
           ]
         }
       }
+
       turn = PlantCycle.compute_next_event_turns(plant, projection)
 
       assert turn == :unable
@@ -333,30 +261,422 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       } = PlantCycle.make_summary(objective, content, alterations)
     end
 
-    @tag not_implemented: true
     test "determine ability to complete a cycle" do
       plant = %UpsilonGarden.Plant {
         id: 0,
         content: %UpsilonGarden.PlantContent {
-            contents: [
+          contents: [
             %Component{
               composition: "AB",
-              quantity: 20
+              quantity: 200
             }
           ],
           max_size: 1000,
-          current_size: 20
+          current_size: 200
         },
         cycle: %PlantCycle {
-          part: :roots
+          level: 1,
+          part: :roots,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 100
+            }
+          ]
         }
       }
 
+      assert [%PlantCycle{
+        part: :roots
+      }] = PlantCycle.completable(plant)
+    end
+    
+    test "completable cycles are sorted by level, lower level first, in case of tie use alpha ordering." do
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            %Component{
+              composition: "AB",
+              quantity: 200
+            }
+          ],
+          max_size: 1000,
+          current_size: 200
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives: [
+                %Component{
+                  composition: "AB",
+                  quantity: 500
+                }
+              ], 
+              dependents: [
+                %PlantCycle {
+                  level: 9,
+                  part: :leaves,
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      objectives: [
+                        %Component{
+                          composition: "AB",
+                          quantity: 50
+                        }
+                      ]
+                    }
+                  ]
+                }, 
+                %PlantCycle {
+                  level: 10,
+                  part: :flowers,
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      objectives: [
+                        %Component{
+                          composition: "AB",
+                          quantity: 10
+                        }
+                      ]
+                    }
+                  ]
+                },
+                %PlantCycle {
+                  level: 10,
+                  part: :bulbs,
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      objectives: [
+                        %Component{
+                          composition: "AB",
+                          quantity: 25
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
 
+      # order matters !
+      assert [%PlantCycle{part: :leaves},%PlantCycle{part: :bulbs},%PlantCycle{part: :flowers}] = PlantCycle.completable(plant)
+    end
+    
+    test "cycle completion depletes plants stores and updates cycle attributes" do
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            %Component{
+              composition: "AB",
+              quantity: 200,
+              used: 0
+            }
+          ],
+          max_size: 1000,
+          current_size: 200
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          storage: 100,
+          structure_current: 100,
+          structure_max: 100,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 100
+            }
+          ], 
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives_gain: 1,
+              storage_gain: 1,
+              success_impact_gain: 1,
+              structure_gain: 1
+            }
+          ]
+        }
+      }
+
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+
+      component = PlantContent.find(plant.content,"AB")
+
+      assert %Component{
+        used: 100,
+        quantity: 100
+      } = component
+
+      assert %PlantCycle{
+        level: 11,
+        part: :roots,
+        storage: 101,
+        structure_current: 101,
+        structure_max: 101,
+        objectives: [
+          %Component{
+            composition: "AB",
+            quantity: 101
+          }
+        ]
+      } = plant.cycle
+    end
+    
+    test "multiple cycle completion depletes plants stores" do
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            %Component{
+              composition: "AB",
+              quantity: 200
+            }
+          ],
+          max_size: 1000,
+          current_size: 200
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          storage: 100,
+          structure_current: 100,
+          structure_max: 100,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 500
+            }
+          ],
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives_gain: 0,
+              dependents: [
+                %PlantCycle {
+                  level: 9,
+                  part: :leaves,
+                  storage: 100,
+                  structure_current: 100,
+                  structure_max: 100,
+                  objectives: [
+                    %Component{
+                      composition: "AB",
+                      quantity: 50
+                    }
+                  ],
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0  ,
+                      storage_gain: 0,
+                      success_impact_gain: 0,
+                      structure_gain: 0                    
+                    }
+                  ]
+                }, 
+                %PlantCycle {
+                  level: 10,
+                  part: :flowers,
+                  storage: 100,
+                  structure_current: 100,
+                  structure_max: 100,
+                  objectives: [
+                    %Component{
+                      composition: "AB",
+                      quantity: 10
+                    }
+                  ],
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0 ,
+                      storage_gain: 0,
+                      success_impact_gain: 0,
+                      structure_gain: 0                     
+                    }
+                  ]
+                },
+                %PlantCycle {
+                  level: 10,
+                  part: :bulbs,
+                  storage: 100,
+                  structure_current: 100,
+                  structure_max: 100,
+                  objectives: [
+                    %Component{
+                      composition: "AB",
+                      quantity: 25
+                    }
+                  ],
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      storage_gain: 0,
+                      success_impact_gain: 0,
+                      structure_gain: 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]          
+        }
+      }
+
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+
+
+      component = PlantContent.find(plant.content,"AB")
+
+      assert %Component{
+        used: 85,
+        quantity: 115
+      } = component
     end
 
+    
+    test "multiple cycle completion may not all succeed" do
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: %UpsilonGarden.PlantContent {
+          contents: [
+            %Component{
+              composition: "AB",
+              quantity: 200
+            }
+          ],
+          max_size: 1000,
+          current_size: 200
+        },
+        cycle: %PlantCycle {
+          level: 10,
+          part: :roots,
+          storage: 100,
+          structure_current: 100,
+          structure_max: 100,
+          objectives: [
+            %Component{
+              composition: "AB",
+              quantity: 500
+            }
+          ],
+          evolutions: [
+            %CycleEvolution{ 
+              pivot: 0,
+              objectives_gain: 0,
+              dependents: [
+                %PlantCycle {
+                  level: 9,
+                  part: :leaves,
+                  storage: 100,
+                  structure_current: 100,
+                  structure_max: 100,
+                  objectives: [
+                    %Component{
+                      composition: "AB",
+                      quantity: 150
+                    }
+                  ],
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      storage_gain: 0,
+                      success_impact_gain: 0,
+                      structure_gain: 0
+                    }
+                  ]
+                }, 
+                %PlantCycle {
+                  level: 10,
+                  part: :flowers,
+                  storage: 100,
+                  structure_current: 100,
+                  structure_max: 100,
+                  objectives: [
+                    %Component{
+                      composition: "AB",
+                      quantity: 10
+                    }
+                  ],
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      storage_gain: 0,
+                      success_impact_gain: 0,
+                      structure_gain: 0
+                    }
+                  ]
+                },
+                %PlantCycle {
+                  level: 10,
+                  part: :bulbs,
+                  storage: 100,
+                  structure_current: 100,
+                  structure_max: 100,
+                  objectives: [
+                    %Component{
+                      composition: "AB",
+                      quantity: 100
+                    }
+                  ],
+                  evolutions: [
+                    %CycleEvolution{ 
+                      pivot: 0,
+                      objectives_gain: 0,
+                      storage_gain: 0,
+                      success_impact_gain: 0,
+                      structure_gain: 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]          
+        }
+      }
+
+      cycle = PlantCycle.completable(plant)
+      plant = PlantCycle.complete(plant, cycle)
+
+      component = PlantContent.find(plant.content,"AB")
+
+      assert %Component{
+        used: 160,
+        quantity: 40
+      } = component
+
+      sub_cycles = Enum.at(plant.cycle.evolutions,0).dependents
+      |> PlantCycle.sort
+      
+      assert [
+        %PlantCycle{part: :bulbs, level: 10},
+        %PlantCycle{part: :leaves, level: 10},
+        %PlantCycle{part: :flowers, level: 11}
+      ] = sub_cycles 
+    end
+    
     @tag not_implemented: true
-    test "in case of tie for a cycle to be completed, deepest first mode" do
+    test "cycle completion updates most cycle attributes" do
 
     end
 
@@ -381,11 +701,6 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     end
     
     @tag not_implemented: true
-    test "cycle completion updates most cycle attributes" do
-
-    end
-
-    @tag not_implemented: true
     test "cycle completion triggers a pivot" do
 
     end
@@ -396,7 +711,17 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
     end
 
     @tag not_implemented: true
-    test "cycle completion depletes plants stores" do
+    test "Cycle sorting should follow plant-level rules(level, alpha, depth)" do 
 
+    end
+
+    @tag not_implemented: true
+    test "Cycle selection should follow plant-level rules(level, alpha, depth)" do 
+
+    end
+
+    @tag not_implemented: true
+    test "Cycle completion component selection should follow cycle-level rules(same as selection)" do 
+      
     end
 end

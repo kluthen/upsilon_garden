@@ -9,11 +9,12 @@ defmodule UpsilonGarden.Cycle.CycleEvolution do
     embeds_many :dependents, PlantCycle
 
     embeds_many :objectives, Component
-    field :pivot, :integer
-    field :structure_gain, :float
-    field :storage_gain, :float
-    field :failure_impact_gain, :float
-    field :success_impact_gain, :float
+    field :pivot, :integer, default: 0
+    field :structure_gain, :float, default: 0.0
+    field :storage_gain, :float, default: 0.0
+    field :objectives_gain, :float, default: 0.0
+    field :failure_impact_gain, :float, default: 0.0
+    field :success_impact_gain, :float, default: 0.0
   end
 
 end
