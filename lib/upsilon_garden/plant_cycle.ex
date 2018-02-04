@@ -223,7 +223,7 @@ defmodule UpsilonGarden.PlantCycle do
   def complete(plant, cycles) do 
     Enum.reduce(cycles, plant, fn cycle, plant ->
       {new_content, success} = Enum.reduce(objectives(cycle), {plant.content, true}, 
-      fn _objective, {content, false} -> 
+        fn _objective, {content, false} -> 
           {content, false}
         objective, {content, true} -> 
           # TODO Should follow a plant wide rule.
@@ -233,10 +233,14 @@ defmodule UpsilonGarden.PlantCycle do
                 {content, 0}
               compo, {content, needed} -> 
                 to_use = Component.available(compo, needed)
-                content = PlantContent.use(content, compo, to_use)
-                {content, needed - to_use}
+                content = PlantContent.use(content, compo.composition, to_use)
+                new_compo = PlantContent.find(content,compo.composition)
+                if needed - to_use < 0.1 do 
+                  {content, 0}
+                else 
+                  {content, needed - to_use}
+                end
           end)
-          
           if rest == 0 do 
             {updated_content, true}
           else
@@ -247,8 +251,14 @@ defmodule UpsilonGarden.PlantCycle do
       if success do 
         plant = Map.put(plant, :content, new_content)
         # now upgrade cycle
-        {_, {plant, _}} = PlantCycle.upgrade(plant, plant.cycle, cycle.part)
-        plant
+        {cycle, {plant, done}} = PlantCycle.upgrade(plant, plant.cycle, cycle.part)
+        # This is top level cycle, it need to be provided to plant.
+        if done do 
+          Map.put(plant, :cycle, cycle)
+        else
+          # for some reason upgrade didn't happend ... Oo
+          plant
+        end
       else
         plant
       end

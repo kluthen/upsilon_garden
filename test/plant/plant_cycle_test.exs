@@ -248,12 +248,12 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
 
       objective = %Component{
         composition: "A",
-        quantity: 100
+        quantity: 100.0
       }
 
       assert %{
         composition: "A",
-        target: 100, 
+        target: 100.0, 
         store: 20.0,
         income: 110.0,
         'completable?': true,
@@ -268,11 +268,11 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           contents: [
             %Component{
               composition: "AB",
-              quantity: 200
+              quantity: 200.0
             }
           ],
-          max_size: 1000,
-          current_size: 200
+          max_size: 1000.0,
+          current_size: 200.0
         },
         cycle: %PlantCycle {
           level: 1,
@@ -280,7 +280,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           objectives: [
             %Component{
               composition: "AB",
-              quantity: 100
+              quantity: 100.0
             }
           ]
         }
@@ -298,11 +298,11 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           contents: [
             %Component{
               composition: "AB",
-              quantity: 200
+              quantity: 200.0
             }
           ],
-          max_size: 1000,
-          current_size: 200
+          max_size: 1000.0,
+          current_size: 200.0
         },
         cycle: %PlantCycle {
           level: 10,
@@ -313,7 +313,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
               objectives: [
                 %Component{
                   composition: "AB",
-                  quantity: 500
+                  quantity: 500.0
                 }
               ], 
               dependents: [
@@ -327,7 +327,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                       objectives: [
                         %Component{
                           composition: "AB",
-                          quantity: 50
+                          quantity: 50.0
                         }
                       ]
                     }
@@ -343,7 +343,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                       objectives: [
                         %Component{
                           composition: "AB",
-                          quantity: 10
+                          quantity: 10.0
                         }
                       ]
                     }
@@ -359,7 +359,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                       objectives: [
                         %Component{
                           composition: "AB",
-                          quantity: 25
+                          quantity: 25.0
                         }
                       ]
                     }
@@ -382,12 +382,12 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           contents: [
             %Component{
               composition: "AB",
-              quantity: 200,
-              used: 0
+              quantity: 200.0,
+              used: 0.0
             }
           ],
-          max_size: 1000,
-          current_size: 200
+          max_size: 1000.0,
+          current_size: 200.0
         },
         cycle: %PlantCycle {
           level: 10,
@@ -398,7 +398,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           objectives: [
             %Component{
               composition: "AB",
-              quantity: 100
+              quantity: 100.0
             }
           ], 
           evolutions: [
@@ -419,8 +419,8 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       component = PlantContent.find(plant.content,"AB")
 
       assert %Component{
-        used: 100,
-        quantity: 100
+        used: 100.0,
+        quantity: 100.0
       } = component
 
       assert %PlantCycle{
@@ -432,7 +432,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         objectives: [
           %Component{
             composition: "AB",
-            quantity: 101
+            quantity: 101.0
           }
         ]
       } = plant.cycle
@@ -445,11 +445,11 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           contents: [
             %Component{
               composition: "AB",
-              quantity: 200
+              quantity: 200.0
             }
           ],
-          max_size: 1000,
-          current_size: 200
+          max_size: 1000.0,
+          current_size: 200.0
         },
         cycle: %PlantCycle {
           level: 10,
@@ -460,7 +460,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           objectives: [
             %Component{
               composition: "AB",
-              quantity: 500
+              quantity: 500.0
             }
           ],
           evolutions: [
@@ -477,7 +477,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                   objectives: [
                     %Component{
                       composition: "AB",
-                      quantity: 50
+                      quantity: 50.0
                     }
                   ],
                   evolutions: [
@@ -499,7 +499,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                   objectives: [
                     %Component{
                       composition: "AB",
-                      quantity: 10
+                      quantity: 10.0
                     }
                   ],
                   evolutions: [
@@ -521,7 +521,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                   objectives: [
                     %Component{
                       composition: "AB",
-                      quantity: 25
+                      quantity: 25.0
                     }
                   ],
                   evolutions: [
@@ -547,8 +547,8 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       component = PlantContent.find(plant.content,"AB")
 
       assert %Component{
-        used: 85,
-        quantity: 115
+        used: 85.0,
+        quantity: 115.0
       } = component
     end
 
@@ -560,11 +560,11 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
           contents: [
             %Component{
               composition: "AB",
-              quantity: 200
+              quantity: 200.0
             }
           ],
-          max_size: 1000,
-          current_size: 200
+          max_size: 1000.0,
+          current_size: 200.0
         },
         cycle: %PlantCycle {
           level: 10,
@@ -592,7 +592,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                   objectives: [
                     %Component{
                       composition: "AB",
-                      quantity: 150
+                      quantity: 150.0
                     }
                   ],
                   evolutions: [
@@ -614,7 +614,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                   objectives: [
                     %Component{
                       composition: "AB",
-                      quantity: 10
+                      quantity: 10.0
                     }
                   ],
                   evolutions: [
@@ -636,7 +636,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
                   objectives: [
                     %Component{
                       composition: "AB",
-                      quantity: 100
+                      quantity: 100.0
                     }
                   ],
                   evolutions: [
@@ -661,8 +661,8 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       component = PlantContent.find(plant.content,"AB")
 
       assert %Component{
-        used: 160,
-        quantity: 40
+        used: 160.0,
+        quantity: 40.0
       } = component
 
       sub_cycles = Enum.at(plant.cycle.evolutions,0).dependents
@@ -673,13 +673,9 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         %PlantCycle{part: :leaves, level: 10},
         %PlantCycle{part: :flowers, level: 11}
       ] = sub_cycles 
+      
     end
     
-    @tag not_implemented: true
-    test "cycle completion updates most cycle attributes" do
-
-    end
-
     @tag not_implemented: true
     test "cycle completion triggers regeneration of structure" do
 
