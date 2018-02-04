@@ -30,7 +30,7 @@ defmodule UpsilonGarden.Application do
   end
 
   def test_init do 
-    alias UpsilonGarden.{Repo,Garden, User, GardenData, Plant, PlantContext, PlantData}
+    alias UpsilonGarden.{Repo,Garden, User, PlantContext}
     User.create "kluthen"
     import Ecto.Query
     garden = Garden |> first |> Repo.one

@@ -234,7 +234,6 @@ defmodule UpsilonGarden.PlantCycle do
               compo, {content, needed} -> 
                 to_use = Component.available(compo, needed)
                 content = PlantContent.use(content, compo.composition, to_use)
-                new_compo = PlantContent.find(content,compo.composition)
                 if needed - to_use < 0.1 do 
                   {content, 0}
                 else 

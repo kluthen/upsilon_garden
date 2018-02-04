@@ -8,7 +8,8 @@
             "command": "mix",
             "taskName": "build",
             "args": [
-                "compile"
+                "compile",
+                "--force"
             ],
             "problemMatcher": [
                 "$mixCompileError",

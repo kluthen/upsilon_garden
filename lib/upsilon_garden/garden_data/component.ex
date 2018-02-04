@@ -59,7 +59,7 @@ defmodule UpsilonGarden.GardenData.Component do
         String.length(comp)
     end
 
-    def changeset(%UpsilonGarden.GardenData.Component{} = component, attrs \\ %{} ) do 
+    def changeset(%Component{} = component, attrs \\ %{} ) do 
         component
         |> cast(attrs, [:composition, :quantity])
         |> validate_required([:composition, :quantity])

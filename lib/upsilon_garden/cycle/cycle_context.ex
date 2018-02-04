@@ -1,8 +1,6 @@
 defmodule UpsilonGarden.Cycle.CycleContext do
   use Ecto.Schema
-  import Ecto.Changeset
-  alias UpsilonGarden.Cycle.{CycleContext,CycleEvolutionContext}
-  alias UpsilonGarden.GardenData.Component
+  alias UpsilonGarden.Cycle.{CycleEvolutionContext}
   require Logger
 
   embedded_schema do
