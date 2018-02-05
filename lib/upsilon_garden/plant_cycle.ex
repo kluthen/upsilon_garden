@@ -374,7 +374,7 @@ defmodule UpsilonGarden.PlantCycle do
     A turn just passed, update plant cycles appropriately, if needed. note a plant may be destroyed thus !!!!
     returns {:destroyed, plant} {:ok, plant}
   """
-  def turn_passed(plant, turns) do 
+  def turn_passed(plant, _turns) do 
     # seek through all cycles and update them. if appropriate
     # might destroy some
     current_date = DateTime.utc_now 
@@ -387,7 +387,7 @@ defmodule UpsilonGarden.PlantCycle do
             # experiation date has been reached !!! 
             last_evolution = applicable_evolution(cycle)
             cycle = cycle 
-            |> Map.put(:structure_current, cycle.structure_current - (last_evolution.failure_impact_gain * cycle.level) * turns)
+            |> Map.put(:structure_current, cycle.structure_current - (last_evolution.failure_impact_gain * cycle.level))
             |> Map.put(:completion_date, UpsilonGarden.Tools.compute_next_date(last_evolution.turns_to_complete))
             
             if cycle.structure_current <= 0 do 
