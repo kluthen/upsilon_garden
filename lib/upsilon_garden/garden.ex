@@ -3,7 +3,7 @@ defmodule UpsilonGarden.Garden do
   import Ecto
   require Logger
   import Ecto.Changeset
-  alias UpsilonGarden.{Plant,PlantContent,Garden,GardenContext,GardenData,GardenProjection,Repo}
+  alias UpsilonGarden.{Plant,PlantContent,Garden,GardenContext,GardenData,GardenProjection,Repo,PlantCycle}
   alias UpsilonGarden.GardenData.{Bloc}
   alias UpsilonGarden.GardenProjection.{Alteration}
 
@@ -56,6 +56,19 @@ defmodule UpsilonGarden.Garden do
       |> put_embed(:data, data)
       |> Repo.update!(returning: true)
     end)
+  end
+
+  @doc """
+    Stores and retrieve garden
+    Only updates garden name, plant, projections and data.
+  """
+  def update!(garden) do 
+    garden
+    |> change(name: garden.name)
+    |> put_assoc(:plants, garden.plants)
+    |> put_embed(:projection, garden.projection)
+    |> put_embed(:data, garden.data)
+    |> Repo.update!(returning: true)
   end
 
   @doc """
@@ -168,6 +181,7 @@ defmodule UpsilonGarden.Garden do
   @doc """
     Compute all plants up to now. Use projections up to next event date or now
     If next event date is reached, recompute new projection and so on.
+    Triggers for each turn a test on cycles.
     Updates garden and return it once updated. ( or not.)
   """
   def compute_update(garden) do
@@ -180,22 +194,49 @@ defmodule UpsilonGarden.Garden do
       |> Repo.update!(returning: true)
     else
       previous_date = garden.updated_at
-      apply_projection_for_timrange(garden, projection, previous_date, projection.next_event)
+      garden = apply_projection_for_timrange(garden, projection, previous_date, projection.next_event, DateTime.utc_now)
+
+      update!(garden)
     end
   end
 
-  def apply_projection_for_timrange(garden, projection, previous_date, next_date) do
+  @doc """
+    apply provided projection for given timerange
+    If unable to do so in one stroke, will iterate up until reaching now. 
+    returns updated garden. 
+  """
+  def apply_projection_for_timrange(garden, projection, previous_date, next_date, target_date) do
     if next_date != nil do
-      if DateTime.diff(next_date, DateTime.utc_now) <= 0 do
+
+      # conditions returns an updated garden.
+      if DateTime.diff(next_date, target_date) <= 0 do
         turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, next_date)
         garden = apply_projection_for_turns(garden,projection, turns)
+
+        {_,plants} = Enum.map_reduce(garden.plants, [], fn plant, acc -> 
+          case PlantCycle.turn_passed(plant, turns) do 
+            {:destroyed, _plant} -> 
+              # not adding it back to acc removes plant from store.
+              {plant, acc}
+            {:ok, plant} -> 
+              cycle = PlantCycle.completable(plant)
+              plant = PlantCycle.complete(plant, cycle)
+              {plant, [plant|acc]}
+            _ -> 
+              {plant, acc}
+          end
+        end)
+        
+        garden = Map.put(garden, :plants, plants)
+
         # Compute a new projection
         projection = GardenProjection.generate(garden)
+        garden = Map.put(garden, :projection, projection)
 
         # redo compute_udpate.
-        apply_projection_for_timrange(garden, projection, next_date, projection.next_event)
+        apply_projection_for_timrange(garden, projection, next_date, projection.next_event,target_date)
       else
-        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, DateTime.utc_now)
+        turns = UpsilonGarden.Tools.compute_elapsed_turns(previous_date, target_date)
         apply_projection_for_turns(garden,projection, turns) # No need to recompute a projection as it hasn't changed.
       end
     else
@@ -206,11 +247,12 @@ defmodule UpsilonGarden.Garden do
 
   @doc """
     Apply projection for given turns
+    Check cycles incidences as well
     returns updated garden
   """
   def apply_projection_for_turns(garden, projection, turns) when turns > 0 do
       # Apply projection to all plants store.
-      updated_plants = Enum.map(garden.plants,  fn plant ->
+      updated_plants = Enum.map(garden.plants, fn plant ->
         pa = Enum.find(projection.plants, nil, fn p ->
           p.plant_id == plant.id
         end)
@@ -239,7 +281,8 @@ defmodule UpsilonGarden.Garden do
           |> Map.put(:current_size, Float.round(content.current_size, 2))
         end
 
-        Map.put(plant, :content, content)
+        
+        Map.put(plant, :content, content)        
       end)
 
       Map.put(garden, :plants, updated_plants)
@@ -250,7 +293,7 @@ defmodule UpsilonGarden.Garden do
   end
 
   @doc false
-  def changeset(%Garden{} = garden, attrs) do
+  def changeset(%Garden{} = garden, attrs \\ %{}) do
     garden
     |> cast(attrs, [:name, :dimension])
     |> cast_embed(:context)

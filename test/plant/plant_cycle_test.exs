@@ -32,9 +32,34 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       }
 
       res = PlantCycle.compute_next_event_by_cycle(plant, [plant.cycle], projection, [], 0)
+      # Returns {part, turns, depth}
       assert [{:roots,1,0}] == res
     end
 
+    test "completion date based on projection should also tic when a cycle get reset by cycle timeout." do 
+      projection = 
+          %GardenProjection.Plant{
+            plant_id: 0,
+            alterations: [
+              %Alteration{
+                component: "ABC",
+                rate: 10.0,
+                event_type: Alteration.absorption()
+              }
+            ]
+          }
+
+      plant = %UpsilonGarden.Plant {
+        id: 0,
+        content: PlantContent.build_content(max_size: 1000.0, contents: [Component.build_component(composition: "AB", quantity: 20.0)]),
+        cycle: PlantCycle.build_cycle(level: 1, part: :roots, completion_date: (Timex.shift(DateTime.utc_now, seconds: 20)),
+           objectives: [Component.build_component(composition: "AB", quantity: 100.0)]) 
+      }
+
+      res = PlantCycle.compute_next_event_by_cycle(plant, [plant.cycle], projection, [], 0)
+      # Returns {part, turns, depth}
+      assert [{:roots,1,0}] == res
+    end
 
     test "seeks only accessible dependencies" do 
       cycle = 
@@ -101,7 +126,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
       ] = PlantCycle.dependents(cycle)
     end
 
-    test "when a projection can't determine end date, it should return unable" do
+    test "when a projection can't determine end date, it should return cycle destruction date" do
       projection =
           %Plant{
             plant_id: 0,
@@ -130,6 +155,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
         cycle: %PlantCycle {
           level: 10,
           part: :roots,
+          completion_date: (Timex.shift(DateTime.utc_now, seconds: 20)),
           objectives: [
             %Component{
               composition: "RT",
@@ -141,7 +167,7 @@ defmodule UpsilonGarden.Plant.PlantCycleTest do
 
       turn = PlantCycle.compute_next_event_turns(plant, projection)
 
-      assert turn == :unable
+      assert turn == 2
     end
 
     test "based on plant content, can find appropriate items for cycle evolution" do 

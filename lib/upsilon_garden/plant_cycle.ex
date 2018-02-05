@@ -13,6 +13,8 @@ defmodule UpsilonGarden.PlantCycle do
       field :structure_max, :float, default: 0.0
       field :structure_current, :float, default: 0.0
 
+      field :completion_date, :utc_datetime
+
       field :vital, :boolean, default: false
       field :death, :integer, default: -1
 
@@ -25,14 +27,17 @@ defmodule UpsilonGarden.PlantCycle do
     cycle = %PlantCycle{
       part: :roots,
       level: 1,
-      storage: 0.0,
-      structure_max: 0.0, 
-      structure_current: 0.0,
+      storage: 1000.0,
+      structure_max: 100.0, 
+      structure_current: 100.0,
+      completion_date: (Timex.shift(DateTime.utc_now, hours: 1)),
       vital: false,
       death: -1,
       objectives: [],
       context: CycleContext.build_context(),
-      evolutions: [CycleEvolution.build_evolution()]
+      evolutions: [CycleEvolution.build_evolution(pivot: 0, objectives: [
+        Component.build_component(composition: "AB", quantity: 10.0)
+      ])]
     }
     |> Map.merge(Enum.into(opts, %{}))
 
@@ -52,7 +57,7 @@ defmodule UpsilonGarden.PlantCycle do
             or :unable : not able to complete anything.
     turns or :unable
   """
-  def compute_next_event_turns(plant, projection) do
+  def compute_next_event_turns(plant,%UpsilonGarden.GardenProjection.Plant{} =  projection) do
     case seek_to_be_completed_cycles(plant, projection) do 
       :unable -> 
         :unable
@@ -68,7 +73,7 @@ defmodule UpsilonGarden.PlantCycle do
     Deepest first
     [{part, turns, depth}] or :unable
   """
-  def seek_to_be_completed_cycles(plant,projection) do 
+  def seek_to_be_completed_cycles(plant,%UpsilonGarden.GardenProjection.Plant{} = projection) do 
     compute_next_event_by_cycle(plant,[plant.cycle], projection, [], 0)
     |> Enum.reduce(:unable, 
       fn {_part, :unable} , res -> 
@@ -114,12 +119,16 @@ defmodule UpsilonGarden.PlantCycle do
                                               _ , _ -> :unable
     end)
 
+    cycle_failure = UpsilonGarden.Tools.compute_elapsed_turns(DateTime.utc_now, cycle.completion_date)
+
     results = 
     if completable == :unable do 
-      [{cycle.part, :unable}| results]
+      [{cycle.part, cycle_failure}| results]
     else
-      [{cycle.part, completable, depth}| results]
+      [{cycle.part, min(cycle_failure, completable), depth}| results]
     end
+
+    
 
     results = compute_next_event_by_cycle(plant,PlantCycle.dependents(cycle),projection,results, depth + 1)
     compute_next_event_by_cycle(plant,rest,projection,results, depth)
@@ -298,13 +307,7 @@ defmodule UpsilonGarden.PlantCycle do
     if cycle.part == cycle_name do 
       # Seek last-valid cycle ( it's the only one that matters in term of gains)
 
-      evolution = Enum.reduce(cycle.evolutions, %CycleEvolution{pivot: -1}, fn evol, current -> 
-        if evol.pivot <= cycle.level and evol.pivot > current.pivot do 
-          evol
-        else 
-          current
-        end        
-      end)
+      evolution = applicable_evolution(cycle)
 
       cycle = Map.put(cycle, :level, cycle.level + 1)
       |> Map.put(:structure_max, cycle.structure_max + evolution.structure_gain)
@@ -315,13 +318,7 @@ defmodule UpsilonGarden.PlantCycle do
       end)
       
       # has upgrade appointed a new evolution ?
-      nevolution = Enum.reduce(cycle.evolutions, %CycleEvolution{pivot: - 1}, fn evol, current -> 
-        if evol.pivot <= cycle.level and evol.pivot > current.pivot do 
-          evol
-        else 
-          current
-        end        
-      end)
+      nevolution = applicable_evolution(cycle)
 
       cycle =
       if nevolution.pivot != evolution.pivot do 
@@ -357,6 +354,111 @@ defmodule UpsilonGarden.PlantCycle do
       end)
 
       {Map.put(cycle, :evolutions, evolutions), {plant, done}}
+    end
+  end
+
+  @doc """
+    Returns highest valid evolution
+  """
+  def applicable_evolution(cycle) do 
+    Enum.reduce(cycle.evolutions, %CycleEvolution{pivot: -1}, fn evol, current -> 
+      if evol.pivot <= cycle.level and evol.pivot > current.pivot do 
+        evol
+      else 
+        current
+      end        
+    end)
+  end
+
+  @doc """
+    A turn just passed, update plant cycles appropriately, if needed. note a plant may be destroyed thus !!!!
+    returns {:destroyed, plant} {:ok, plant}
+  """
+  def turn_passed(plant, turns) do 
+    # seek through all cycles and update them. if appropriate
+    # might destroy some
+    current_date = DateTime.utc_now 
+
+    {plant, _, destroyed} = get_and_update_all(plant, false, 
+      fn plant, cycle, true -> 
+          {:drop, plant, cycle, true} 
+        plant, cycle, false ->
+          if DateTime.diff(cycle.completion_date, current_date) < 0 do 
+            # experiation date has been reached !!! 
+            last_evolution = applicable_evolution(cycle)
+            cycle = cycle 
+            |> Map.put(:structure_current, cycle.structure_current - (last_evolution.failure_impact_gain * cycle.level) * turns)
+            |> Map.put(:completion_date, UpsilonGarden.Tools.compute_next_date(last_evolution.turns_to_complete))
+            
+            if cycle.structure_current <= 0 do 
+              {:drop, plant, cycle, true}
+            else
+              {:update, plant, cycle, false}
+            end
+          else
+            {:keep, plant, cycle, false}
+          end
+      end)
+
+    if destroyed do 
+      {:destroyed, plant}
+    else
+      {:ok, plant}
+    end
+  end
+
+  @doc """
+    Apply provided fn on all cycles
+      fn plant, cycle ->
+        {:update, plant, cycle, acc} : will update cycle
+        {:keep, plant, cycle, acc} : will keep old cycle as is.
+        {:drop, plant, cycle, acc} : will drop this cycle and all related cycles; won't execute fn on children nodes.
+      end
+    will update content available size 
+    If content max size drops bellow used size ... bad stuff might happend ;)
+    returns updated plant, acc
+  """
+  def get_and_update_all(plant, acc, fun) do 
+    {plant, cycles, acc} = get_and_update_all(plant, [plant.cycle], [], acc, fun)
+    {Map.put(plant, :cycle, Enum.at(cycles, 0)), acc}
+  end
+
+  def get_and_update_all(plant, [], cycles, acc, _fun), do: {plant, cycles, acc}
+
+  def get_and_update_all(plant, [cycle|rest], cycles, acc, fun) do 
+    case fun.(plant, cycle, acc) do 
+      {:update, plant, cycle, acc} -> 
+
+        {nevolutions, {plant, acc}} = Enum.map_reduce(cycle.evolutions, {plant, acc}, fn evol, {plant, acc} -> 
+          if evol.pivot <= cycle.level do 
+            {plant, deps, acc} = get_and_update_all(plant, evol.dependents, [],acc, fun)
+
+            {Map.put(evol, :dependents, deps), {plant, acc}}
+          else
+            {evol, {plant, acc}}
+          end
+        end)
+        cycle = Map.put(cycle, :evolutions, nevolutions)
+
+        {plant, ncycles, acc} = get_and_update_all(plant, rest, cycles, acc, fun)
+        {plant, [cycle|ncycles], acc}
+      {:keep, plant, _cycle, acc} -> 
+        {nevolutions,{ plant, acc}} = Enum.map_reduce(cycle.evolutions, {plant, acc}, fn evol, {plant, acc} -> 
+          if evol.pivot <= cycle.level do 
+            {plant, deps, acc} = get_and_update_all(plant, evol.dependents, [], acc, fun)
+
+            {Map.put(evol, :dependents, deps), {plant, acc}}
+          else
+            {evol, {plant, acc}}
+          end
+        end)
+        cycle = Map.put(cycle, :evolutions, nevolutions)
+
+        {plant, ncycles, acc} = get_and_update_all(plant, rest, cycles, acc, fun)
+        {plant, [cycle|ncycles], acc}
+
+      {:drop, plant, _cycle, acc} -> 
+        {plant, cycles, acc}
     end
   end
 end

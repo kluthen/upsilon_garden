@@ -15,16 +15,18 @@ defmodule UpsilonGarden.Cycle.CycleEvolution do
     field :objectives_gain, :float, default: 0.0
     field :failure_impact_gain, :float, default: 0.0
     field :success_impact_gain, :float, default: 0.0
+    field :turns_to_complete, :integer, default: 240
   end
 
   def build_evolution(opts \\ []) do 
     %CycleEvolution{
       pivot: 0,
-      structure_gain: 0.0,
-      storage_gain: 0.0,
-      objectives_gain: 0.0,
-      failure_impact_gain: 0.0,
-      success_impact_gain: 0.0,
+      structure_gain: 100.0,
+      storage_gain: 10.0,
+      objectives_gain: 10.0,
+      failure_impact_gain: 10.0,
+      success_impact_gain: 10.0,
+      turns_to_complete: 240,
       dependents: [],
       objectives: []
     }

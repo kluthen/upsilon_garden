@@ -3,8 +3,9 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
     import Ecto.Query
     import Ecto.Changeset
     require Logger
-    alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContent,PlantContext,GardenProjection}
+    alias UpsilonGarden.{User,Garden,Repo,Plant,PlantContent,PlantContext,GardenProjection,PlantCycle}
     alias UpsilonGarden.GardenProjection.{Alteration}
+    alias UpsilonGarden.GardenData.Component
 
     setup do
         # Allows Ecto to exists here:
@@ -141,10 +142,16 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
 
         plt = %Plant{
             id: 1,
-            content: %PlantContent{
-                max_size: 310,
-                current_size: 0
-            }
+            content: PlantContent.build_content(
+                max_size: 310.0
+            ),
+            cycle: PlantCycle.build_cycle(evolutions: [
+                UpsilonGarden.Cycle.CycleEvolution.build_evolution(
+                    objectives: [
+                        Component.build_component(composition: "RT", quantity: 100) # ensure cycle doesn't proc, that's not what we're testing now ;)
+                    ]
+                )
+            ])
         }
 
         projection = GardenProjection.compute_plants(projection,[plt])
@@ -174,6 +181,71 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
         assert projection.next_event == next_event
     end
 
+    
+    test "plant projection ends date the turn where a cycle can be completed." do
+        projection = %GardenProjection{
+            plants: [
+                %GardenProjection.Plant{
+                    plant_id: 1,
+                    alteration_by_parts: [
+                        %GardenProjection.PartAlteration{
+                            root_pos_x: 4,
+                            root_pos_y: 0,
+                            alterations: [
+                                %Alteration{
+                                    component: "AB",
+                                    event_type: 1,
+                                    rate: 10.0
+                                },
+                                %Alteration{
+                                    component: "DAB",
+                                    event_type: 1,
+                                    rate: 10.0
+                                }
+                            ]
+                        },
+                        %GardenProjection.PartAlteration{
+                            root_pos_x: 4,
+                            root_pos_y: 1,
+                            alterations: [
+                                %Alteration{
+                                    component: "AB",
+                                    event_type: 1,
+                                    rate: 10.0
+                                },
+                                %Alteration{
+                                    component: "DAB",
+                                    event_type: 0,
+                                    rate: 3.0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+
+        plt = %Plant{
+            id: 1,
+            content: PlantContent.build_content(
+                max_size: 310.0
+            ),
+            cycle: PlantCycle.build_cycle(evolutions: [
+                UpsilonGarden.Cycle.CycleEvolution.build_evolution(
+                    objectives: [
+                        Component.build_component(composition: "AB", quantity: 25) # gain 20 per turns ... should be quick ;)
+                    ]
+                )
+            ])
+        }
+
+        projection = GardenProjection.compute_plants(projection,[plt])
+
+        next_event = UpsilonGarden.Tools.compute_next_date(2)
+
+        assert Enum.at(projection.plants,0).next_event == next_event
+        assert projection.next_event == next_event
+    end
 
     test "if all alterations cant be filled a turn, then end date is next turn" do
         projection = %GardenProjection{
@@ -220,10 +292,13 @@ defmodule UpsilonGarden.Projection.ProjectionTest do
 
         plt = %Plant{
             id: 1,
-            content: %PlantContent{
-                max_size: 310,
-                current_size: 290   # out of 30.0, can't fill all
-            }
+            content: PlantContent.build_content(
+                contents: [
+                    Component.build_component(composition: "RT", quantity: 290.0)
+                ],
+                max_size: 310.0
+            ),
+            cycle: PlantCycle.build_cycle()
         }
 
         projection = GardenProjection.compute_plants(projection,[plt])

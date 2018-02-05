@@ -3,7 +3,7 @@ defmodule UpsilonGarden.GardenProjection do
     import Ecto.Query
     import Ecto.Changeset
     require Logger
-    alias UpsilonGarden.{Garden,GardenProjection,Repo}
+    alias UpsilonGarden.{Garden,GardenProjection,Repo,PlantCycle}
     alias UpsilonGarden.GardenProjection.{Plant,Projecter,Alteration}
 
     embedded_schema do 
@@ -71,12 +71,19 @@ defmodule UpsilonGarden.GardenProjection do
         
     end
 
+    @doc """
+        Do the maths for each plant generating a global projection (and not bloc by bloc based one ) 
+        Seek next event date based on plant being filled
+        Seek next event date based on cycles
+        stores nearest event.
+        returns projection
+    """
     def compute_plants(projection,plants) do 
         # Update projections to sums parts into general plant based projection.
         # We don't have access to plants here so, we can't compute end date.
         projection = Map.update(projection, :plants, [], fn plants_alterations -> 
-            Enum.map(plants_alterations, fn plant ->
-                alterations = Alteration.merge_part_alterations(plant.alteration_by_parts)
+            Enum.map(plants_alterations, fn plant_alt ->
+                alterations = Alteration.merge_part_alterations(plant_alt.alteration_by_parts)
                 |> Map.values
                 |> List.flatten
 
@@ -84,11 +91,17 @@ defmodule UpsilonGarden.GardenProjection do
 
                 # well, if not found, we do have a big problem here ;)
                 plt = Enum.find(plants, nil, fn p ->
-                    p.id == plant.plant_id 
+                    p.id == plant_alt.plant_id 
                 end)
 
+                plant_alt = plant_alt
+                |> Map.put(:alterations, alterations)
+
+                turns_to_cycle = PlantCycle.compute_next_event_turns(plt, plant_alt)
                 # ensure we've work to do.
                 turns_to_full = UpsilonGarden.Tools.turns_to_full(plt.content.current_size, plt.content.max_size, total)
+    
+                plant_alt = 
                 if total > 0.1 and turns_to_full > 0 do 
                     next_event = UpsilonGarden.Tools.compute_next_date(turns_to_full)
 
@@ -101,14 +114,25 @@ defmodule UpsilonGarden.GardenProjection do
                         end
                     end)
 
-                    plant
+                    plant_alt
                     |> Map.put(:alterations, alterations)
-                    |> Map.put(:next_event, next_event)
                 else 
-
-                    plant
-                    |> Map.put(:next_event, nil)
-                    |> Map.put(:alterations, alterations)
+                    plant_alt
+                end
+                
+                cond do 
+                    turns_to_cycle == :unable -> 
+                        plant_alt 
+                        |> Map.put(:next_event, nil)
+                    turns_to_full < 1 or total < 0.1 ->
+                        plant_alt 
+                        |> Map.put(:next_event, UpsilonGarden.Tools.compute_next_date(turns_to_cycle))
+                    turns_to_cycle < turns_to_full -> 
+                        plant_alt 
+                        |> Map.put(:next_event, UpsilonGarden.Tools.compute_next_date(turns_to_cycle))
+                    true ->
+                        plant_alt 
+                        |> Map.put(:next_event, UpsilonGarden.Tools.compute_next_date(turns_to_full))
                 end
             end) 
         end) 

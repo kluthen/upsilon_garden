@@ -1,7 +1,7 @@
 defmodule UpsilonGarden.Plant do
   use Ecto.Schema
   import Ecto.Changeset
-  alias UpsilonGarden.{Plant,Garden,PlantContent,PlantContext,PlantData,Repo}
+  alias UpsilonGarden.{Plant,Garden,PlantContent,PlantContext,PlantData,Repo,PlantCycle}
 
 
   schema "plants" do
@@ -34,6 +34,7 @@ defmodule UpsilonGarden.Plant do
     |> put_embed(:context, plant_ctx)
     |> put_embed(:data, PlantData.build())
     |> put_embed(:content, PlantContent.build_content())
+    |> put_embed(:cycle, PlantCycle.build_cycle())
     |> Repo.insert!(returning: true)
 
     # Based on seed, create an actual root network, and setup objectives for next stage.
