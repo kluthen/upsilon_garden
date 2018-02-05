@@ -391,7 +391,7 @@ defmodule UpsilonGarden.PlantCycle do
             |> Map.put(:completion_date, UpsilonGarden.Tools.compute_next_date(last_evolution.turns_to_complete))
             
             if cycle.structure_current <= 0 do 
-              {:drop, plant, cycle, true}
+              {:drop, plant, cycle, cycle.vital}
             else
               {:update, plant, cycle, false}
             end
