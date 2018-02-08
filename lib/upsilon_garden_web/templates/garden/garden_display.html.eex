@@ -1,0 +1,14 @@
+<div class="row" >
+  <!-- Display garden (full size) -->
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+  <%= render "garden_segment.html" %>
+</div>

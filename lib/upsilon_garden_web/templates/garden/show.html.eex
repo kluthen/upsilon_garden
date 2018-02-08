@@ -1,0 +1,7 @@
+<%= render "garden_display.html" %>
+<%= render "user_interface.html" %>
+
+
+<pre>
+    <%= Poison.encode! @garden %>
+</pre>

@@ -2,7 +2,7 @@ defmodule UpsilonGarden.User do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto 
-  alias UpsilonGarden.{User, Repo, Garden}
+  alias UpsilonGarden.{User, Repo, Garden,PlantContext}
 
   schema "users" do
     field :name, :string
@@ -19,6 +19,7 @@ defmodule UpsilonGarden.User do
       |> build_assoc(:gardens)
       |> change(name: "My First Garden")
       |> Garden.create()
+
       
       nil
     end )

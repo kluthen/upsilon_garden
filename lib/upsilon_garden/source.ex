@@ -8,6 +8,7 @@ defmodule UpsilonGarden.Source do
   def thermal, do: 1
   def well, do: 2
 
+  @derive {Poison.Encoder, except: [:'__meta__',:garden]}
   schema "sources" do
     field :power, :integer
     # define action range

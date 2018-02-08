@@ -1,0 +1,9 @@
+<h2> Available Gardens </h2>
+
+<ul>
+<%= for garden <- @gardens do %>
+    <li> <%= link(garden.name, to: "/garden/#{garden.id}") %> </li>
+<% end %>
+</ul>
+   
+<%= ReactPhoenix.ClientSide.react_component("Components.Hello", %{name: "React"}) %>

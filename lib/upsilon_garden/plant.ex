@@ -4,6 +4,7 @@ defmodule UpsilonGarden.Plant do
   alias UpsilonGarden.{Plant,Garden,PlantContent,PlantContext,PlantData,Repo,PlantCycle}
 
 
+  @derive {Poison.Encoder, except: [:'__meta__',:garden]}
   schema "plants" do
     field :name, :string
     field :segment, :integer

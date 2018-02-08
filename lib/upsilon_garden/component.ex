@@ -4,6 +4,7 @@ defmodule UpsilonGarden.Component do
   alias UpsilonGarden.Component
 
 
+  @derive {Poison.Encoder, except: [:'__meta__', :source, :event]}
   schema "components" do
     field :composition, :string
     field :quantity, :integer

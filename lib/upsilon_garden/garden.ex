@@ -7,7 +7,7 @@ defmodule UpsilonGarden.Garden do
   alias UpsilonGarden.GardenData.{Bloc}
   alias UpsilonGarden.GardenProjection.{Alteration}
 
-
+  @derive {Poison.Encoder, except: [:'__meta__',:events,:user]}
   schema "gardens" do
     field :dimension, :integer
     field :name, :string
@@ -50,10 +50,13 @@ defmodule UpsilonGarden.Garden do
       |> GardenData.activate([3,4,5])
       |> Map.put(:id, nil)
 
+
+      {garden,projection} = prepare_projection(garden)
       # Store updated garden.
       garden
       |> change()
       |> put_embed(:data, data)
+      |> put_embed(:projection, projection)
       |> Repo.update!(returning: true)
     end)
   end

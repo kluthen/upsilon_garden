@@ -40,6 +40,7 @@ defmodule UpsilonGardenWeb do
       import UpsilonGardenWeb.Router.Helpers
       import UpsilonGardenWeb.ErrorHelpers
       import UpsilonGardenWeb.Gettext
+      import ReactPhoenix.ClientSide
     end
   end
 

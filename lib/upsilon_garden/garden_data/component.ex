@@ -4,6 +4,7 @@ defmodule UpsilonGarden.GardenData.Component do
     require Logger
     alias UpsilonGarden.GardenData.Component
 
+    @derive {Poison.Encoder, except: [:'__meta__']}
     embedded_schema do 
         field :composition, :string
         field :quantity, :float, default: 0.0

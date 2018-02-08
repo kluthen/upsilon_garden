@@ -1,0 +1,11 @@
+<div class="row">
+    <div class="col-lg-4">Plant: </div>
+    <div class="col-lg-4"></div>
+    <div class="col-lg-4">Recolter</div>
+</div>
+<div class="row">
+    <div class="col-lg-4">Humidité: </div>
+    <div class="col-lg-4"></div>
+    <div class="col-lg-2">Mesurer</div>
+    <div class="col-lg-2">Arroser</div>
+</div>
