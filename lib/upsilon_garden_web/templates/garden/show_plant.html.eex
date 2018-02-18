@@ -1,0 +1,4 @@
+<h4><%= @plant.name %></h4>
+<%= for component <- @plant.content.contents do %>
+    <%= component.quantity %> x <%= component.composition %> <br/>
+<% end %>

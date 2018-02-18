@@ -1,0 +1,46 @@
+<div class="segment segment_<%= 
+        if @segment.active do 
+            "active"
+        else
+            "inactive"
+        end
+    %>" 
+    <%= 
+        if Map.has_key?(@plants, @segment.position) do  
+        "data-plant-id=#{@plants[@segment.position].id}"
+        end %>
+     >
+    <!-- Display plant or whatever data we might have here ... -->
+    <div class="above_ground above_ground_<%= 
+        if @segment.active do 
+            "active"
+        else
+            "inactive"
+        end
+    %>"><center><%= @segment.position %></center>
+    <%= if Map.has_key?(@plants, @segment.position) do %>
+        <center>
+        <br/><br/>*<br/>V<br/>V<br/>V<br/>
+        V
+        V
+        <br/>
+        V
+        V
+        V
+        <br/>
+        V
+        V
+        </center>
+    <% else %>
+
+    <% end %>
+    </div>
+    
+    <div class="ground_level"> </div>
+    <div class="ground">
+        <%= for bloc <- @segment.blocs do %>
+            <%= render "bloc.html", bloc: bloc, active: @segment.active, segment_id: @segment.position %>
+        <% end %>
+    </div>
+    <div class="below_ground"></div>
+</div>

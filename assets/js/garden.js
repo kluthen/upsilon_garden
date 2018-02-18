@@ -1,4 +1,4 @@
-var garden = {
+let garden = {
     current_segment: 0,
     current_bloc: 0,
     setSegment: function(sid) {
@@ -81,3 +81,4 @@ $(".segment_active[data-plant-id]").click(function() {
     garden.setPlant(plant_id);
     garden.setProjection(plant_id);
 })
+

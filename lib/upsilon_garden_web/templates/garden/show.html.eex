@@ -1,7 +1,48 @@
-<%= render "garden_display.html" %>
-<%= render "user_interface.html" %>
 
 
-<pre>
+<div class="row ">
+  <div class="col-lg-8" style="background-color:yellow;">
+    <h4>Garden</h4>
+
+    <div class="garden">
+      <%= for segment <- @garden.segments do %>
+        <%= render "segment.html", segment: segment, plants: @plants%>
+      <% end %>
+    </div>
+
+  </div>
+  <div class="col-lg-2" style="background-color:pink;">
+    <div class="row">
+      <div class="col-lg-12">
+        <h4>Help</h4>
+        <div id="show_segment"></div>
+        <div id="show_bloc"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <h4>Locked</h4>
+        <div id="show_locked_bloc"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2" style="background-color:green;" >
+  <div class="row">
+      <div class="col-lg-12">
+        <h4>Plant</h4>
+        <div id="show_plant"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <h4>Projection</h4>
+        <div id="show_projection_plant"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <pre>
     <%= Poison.encode! @garden %>
-</pre>
+  </pre>
+

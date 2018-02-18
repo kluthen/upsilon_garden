@@ -1,0 +1,6 @@
+<%= if @influence.prime_root do %>
+    Prime Root <br/>
+<% end %>
+<%= for component <- @influence.components do %>
+    <%= component.quantity * @influence.ratio %> x <%= component.composition %> <br/>
+<% end %>

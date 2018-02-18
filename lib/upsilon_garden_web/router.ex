@@ -37,6 +37,7 @@ defmodule UpsilonGardenWeb.Router do
     
     get "/garden/:id", GardenController, :show
     get "/plant/:id", PlantController, :show
+    get "/plant/projection/:plant", PlantController, :get_projection
     
     put "/garden/:id/measure_water/:segment", GardenController, :measure_water
     put "/garden/:id/water/:segment", GardenController, :water

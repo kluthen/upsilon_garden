@@ -1,0 +1,6 @@
+<%= if @segment != nil do %>
+Segment :<%= @segment.position %><br/>
+Active : <%= @segment.active %><br/>
+<% else %>
+No Segment data
+<% end %>

@@ -6,4 +6,3 @@
 <% end %>
 </ul>
    
-<%= ReactPhoenix.ClientSide.react_component("Components.Hello", %{name: "React"}) %>
