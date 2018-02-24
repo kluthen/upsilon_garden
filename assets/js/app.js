@@ -22,6 +22,7 @@ import "react-phoenix"
 
 // import socket from "./socket"
 import Garden from "./components/garden"
+import whatever from "./garden"
 
 window.Components = {
     Garden
