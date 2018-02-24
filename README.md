@@ -155,11 +155,11 @@ This require a few new features in the engine:
 * Compute plant water level ( based on root presence per segments )
 * Turn by turn water level checks and apply its penality if necessary
 * Add GUI Control: Check water level on segment; only provide minimal informations: 
- * Totally dry ( < 10% )
- * Dry ( < 30% )
- * OK ( < 60% )
- * Mud ( < 80% )
- * Watery ( < 100% )
+  * Totally dry ( < 10% )
+  * Dry ( < 30% )
+  * OK ( < 60% )
+  * Mud ( < 80% )
+  * Watery ( < 100% )
 * Add GUI Control: Water segment : Create an event on a given Segment, add 30% (+ apply segment water retension) of water level for 8 hours.
 * Add GUI Control: Check Plant Health: tell whether it looks good or not (based on global structure points )
 * Add GUI Control: Plant Seed
