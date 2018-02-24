@@ -25,24 +25,27 @@ Create files in config folder:
 
 *dev.secret.exs*
 
-> use Mix.Config
->
-> # Configure your database
-> config :upsilon_garden, UpsilonGarden.Repo,
->  adapter: Ecto.Adapters.Postgres,
->  username: <fill in>,
->  password: <fill in>,
->  database: <fill in>,
->  hostname: <fill in>,
->  pool_size: 10
->
+```
+ use Mix.Config
+
+ # Configure your database
+ config :upsilon_garden, UpsilonGarden.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: <fill in>,
+  password: <fill in>,
+  database: <fill in>,
+  hostname: <fill in>,
+  pool_size: 10
+```
 
 Execute `mix phx.gen.secret` and get generated key
 
 add to the file
 
-> config :upsilon_garden, UpsilonGardenWeb.Endpoint,
->  secret_key_base: "<put generated key>"
+```
+ config :upsilon_garden, UpsilonGardenWeb.Endpoint,
+  secret_key_base: "<put generated key>"
+```
 
 Also, create a copy and alter database name for *test.secret.exs*, if you plan to use it in prod, do so for prod.secret.exs as well ;)
 
