@@ -309,7 +309,7 @@ defmodule UpsilonGarden.Time.ProjectionTest do
         assert projection.next_event == next_event
     end
 
-    @tag :not_implemented
+    @tag not_implemented: true
     test "removes plants from projection when they can't handle any absorption" do
     end
 end
