@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Projection.ProjectionBlocTest do 
+defmodule UpsilonGarden.Time.ProjectionBlocTest do 
     use ExUnit.Case, async: true
     alias UpsilonGarden.GardenProjection
     alias UpsilonGarden.GardenProjection.{Projecter,Alteration,PartAlteration}

@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Plant.PlantCycleGenerationTest do
+defmodule UpsilonGarden.PlantEvolution.PlantCycleGenerationTest do
     use ExUnit.Case, async: false
     require Logger
     

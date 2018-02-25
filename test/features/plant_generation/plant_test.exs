@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Plant.PlantTest do
+defmodule UpsilonGarden.PlantGeneration.PlantTest do
     use ExUnit.Case, async: false
     import Ecto.Query
     require Logger

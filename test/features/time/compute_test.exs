@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Projection.ComputeTest do
+defmodule UpsilonGarden.Time.ComputeTest do
     use ExUnit.Case, async: false
     import Ecto.Query
     require Logger

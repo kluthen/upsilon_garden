@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Plant.PlantRootGenerationTest do 
+defmodule UpsilonGarden.PlantGeneration.RootGenerationTest do 
     use ExUnit.Case, async: false
     import Ecto.Query
     import Ecto.Changeset

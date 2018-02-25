@@ -1,4 +1,4 @@
-defmodule UpsilonGarden.Projection.ProjectionTest do
+defmodule UpsilonGarden.Time.ProjectionTest do
     use ExUnit.Case, async: false
     import Ecto.Query
     import Ecto.Changeset
