@@ -6,7 +6,7 @@ defmodule UpsilonGarden.Cycle.CycleContext do
 
   embedded_schema do
     embeds_many :evolutions, CycleEvolutionContext
-    
+
     field :base_storage_range, {:array, :float}
     field :base_structure_range, {:array, :float}
     field :base_failure_impact_range, {:array, :float}
@@ -18,11 +18,11 @@ defmodule UpsilonGarden.Cycle.CycleContext do
     field :base_structure, :float
     field :base_failure_impact, :float
     field :base_sucess_impact, :float
-    field :death, :integer, default: 0 
-    
+    field :death, :integer, default: 0
+
   end
 
-  def build_context(opts \\ []) do 
+  def build_context(opts \\ []) do
     %CycleContext{
       evolutions: [],
       base_storage_range: [],
@@ -35,18 +35,19 @@ defmodule UpsilonGarden.Cycle.CycleContext do
     |> Map.merge(Enum.into(opts, %{}))
   end
 
-  def default() do 
-    %CycleContext{
-      base_storage_range: prepare_range(),
-      base_structure_range: prepare_range(),
-      base_failure_impact_range: prepare_range(),
-      base_success_impact_range: prepare_range(),
-      vital: false,
-      death_range: prepare_range(),
-    }
+  def default() do
+    # %CycleContext{
+    #   base_storage_range: prepare_range(),
+    #   base_structure_range: prepare_range(),
+    #   base_failure_impact_range: prepare_range(),
+    #   base_success_impact_range: prepare_range(),
+    #   vital: false,
+    #   death_range: prepare_range(),
+    # }
+    %CycleContext{}
   end
 
-  def roll_dices(%CycleContext{} = ctx) do 
+  def roll_dices(%CycleContext{} = ctx) do
     ctx
   end
 
