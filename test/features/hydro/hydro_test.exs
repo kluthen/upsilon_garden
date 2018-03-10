@@ -19,8 +19,9 @@ defmodule UpsilonGarden.Hydro.HydroTest do
 
     test "with a provided garden, ensure all segment have a water retention rate > 0 and a current hydro level", context do
       for segment <- context.garden.data.segments do
-        assert segment.retention > 0
-        assert segment.hydro_level > 0
+        assert segment.retention > 0 and segment.retention <= 1
+        assert segment.hydro_level > 0 and segment.hydro_level <= 1
+        assert segment.default_hydro_level > 0 and segment.default_hydro_level <= 1
       end
     end
 
