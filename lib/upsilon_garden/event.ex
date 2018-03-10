@@ -18,6 +18,12 @@ defmodule UpsilonGarden.Event do
     timestamps()
   end
 
+  def seek(events, id) do
+    Enum.find(events, fn e ->
+      e.id == id
+    end)
+  end
+
   @doc false
   def changeset(%Event{} = event, attrs) do
     event

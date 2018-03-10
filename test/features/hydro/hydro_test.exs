@@ -17,28 +17,31 @@ defmodule UpsilonGarden.Hydro.HydroTest do
       {:ok, garden: garden, user: user}
     end
 
-    @tag not_implemented: true
     test "with a provided garden, ensure all segment have a water retention rate > 0 and a current hydro level", context do
+      for segment <- context.garden.data.segments do
+        assert segment.retention > 0
+        assert segment.hydro_level > 0
+      end
     end
 
     @tag not_implemented: true
-    test "we can check hydro level of a segment", context do 
+    test "we can check hydro level of a segment", context do
     end
 
     @tag not_implemented: true
-    test "we can check hydro level of a plant", context do 
+    test "we can check hydro level of a plant", context do
     end
 
     @tag not_implemented: true
-    test "we can water a segment", context do 
+    test "we can water a segment", context do
     end
 
     @tag not_implemented: true
-    test "watering by 15% a segment create a watering event on the segment for a duration of 8 hours with appropriate power", context do 
+    test "watering by 15% a segment create a watering event on the segment for a duration of 8 hours with appropriate power", context do
     end
 
     @tag not_implemented: true
-    test "watering by 15% a segment that has 30% retention will in effect increase water level by 4.5%", context do 
+    test "watering by 15% a segment that has 30% retention will in effect increase water level by 4.5%", context do
 
     end
 end
