@@ -15,7 +15,7 @@ defmodule UpsilonGarden.GardenData.Segment do
     end
 
     def compute_hydro(segment,events) do
-      {def_retention, def_default_hydro_level} = Enum.reduce(segment.blocs, {0,0}, fn bloc, {ret, dhydro} ->
+      {def_retention, def_default_hydro_level} = Enum.reduce(segment.blocs, {0.0,0.0}, fn bloc, {ret, dhydro} ->
         {ret + bloc.retention, dhydro + bloc.hydro_level}
       end)
 

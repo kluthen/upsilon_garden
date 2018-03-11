@@ -10,8 +10,8 @@ defmodule UpsilonGarden.GardenData.Bloc do
         field :segment, :integer
         field :position, :integer
         field :sources, {:array, :map}
-        field :retention, :float
-        field :hydro_level, :float
+        field :retention, :float, default: 0.0
+        field :hydro_level, :float, default: 0.0
         embeds_many :components, UpsilonGarden.GardenData.Component
         embeds_many :influences, UpsilonGarden.GardenData.Influence
     end
